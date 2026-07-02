@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.0.12 - 2026-07-03
+
+- Added a Windows-only frameless desktop window.
+- Added custom title-bar drag area with minimize and close controls.
+- Kept the desktop window fixed-size with maximise unavailable.
+
 ## v3.0.11 - 2026-07-02
 
 - Kept the remote composer usable while a Codex thread is running.

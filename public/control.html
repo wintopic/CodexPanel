@@ -65,6 +65,10 @@
       align-items: center;
       gap: 9px;
       min-width: 0;
+      min-height: 26px;
+      padding: 0 2px;
+      user-select: none;
+      --wails-draggable: drag;
     }
     .logo {
       width: 20px;
@@ -86,6 +90,31 @@
       font-weight: 850;
       letter-spacing: 0;
       white-space: nowrap;
+    }
+    .window-controls {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      --wails-draggable: no-drag;
+    }
+    .window-btn {
+      width: 30px;
+      height: 24px;
+      display: inline-grid;
+      place-items: center;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      padding: 0;
+      --wails-draggable: no-drag;
+    }
+    .window-btn svg { width: 15px; height: 15px; }
+    .window-btn:hover { background: rgba(0,0,0,.06); }
+    .window-btn.close:hover {
+      background: #e64f4f;
+      color: #fff;
     }
     .panel {
       min-height: 0;
@@ -581,6 +610,7 @@
     <symbol id="icon-check-circle" viewBox="0 0 24 24"><path d="M21.8 10A10 10 0 1 1 17 3.3"></path><path d="m9 11 3 3L22 4"></path></symbol>
     <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7C3.4 7.6 7.24 5 12 5s8.6 2.6 9.94 6.65a1 1 0 0 1 0 .7C20.6 16.4 16.76 19 12 19s-8.6-2.6-9.94-6.65Z"></path><circle cx="12" cy="12" r="3"></circle></symbol>
     <symbol id="icon-eye-off" viewBox="0 0 24 24"><path d="m2 2 20 20"></path><path d="M10.73 5.08A10.74 10.74 0 0 1 12 5c4.76 0 8.6 2.6 9.94 6.65a1 1 0 0 1 0 .7 13 13 0 0 1-1.67 2.04"></path><path d="M6.61 6.61A12.9 12.9 0 0 0 2.06 11.65a1 1 0 0 0 0 .7C3.4 16.4 7.24 19 12 19a10.7 10.7 0 0 0 5.39-1.61"></path><path d="M9.88 9.88a3 3 0 0 0 4.24 4.24"></path></symbol>
+    <symbol id="icon-minus" viewBox="0 0 24 24"><path d="M5 12h14"></path></symbol>
     <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
     <symbol id="icon-cpu" viewBox="0 0 24 24"><rect width="16" height="16" x="4" y="4" rx="2"></rect><rect width="6" height="6" x="9" y="9" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
   </svg>
@@ -589,6 +619,10 @@
     <header class="top">
       <div class="logo" aria-hidden="true"><img src="icons/icon-64.png?v=codexpanel-3.0.5-20260702-1" alt="" /></div>
       <h1>CodexPanel 控制面板</h1>
+      <div class="window-controls" aria-label="窗口控制">
+        <button class="window-btn" id="window-minimize" type="button" aria-label="最小化" title="最小化"><svg aria-hidden="true"><use href="#icon-minus"></use></svg></button>
+        <button class="window-btn close" id="window-close" type="button" aria-label="关闭" title="关闭"><svg aria-hidden="true"><use href="#icon-x"></use></svg></button>
+      </div>
     </header>
 
     <section class="service-bar" aria-label="服务状态">
@@ -1137,7 +1171,24 @@
       renderUpdateStatus(state.update);
       showToast('正在重启并安装更新...');
     }
+    function bindWindowControls() {
+      $('window-minimize')?.addEventListener('click', () => {
+        if (window.runtime?.WindowMinimise) {
+          window.runtime.WindowMinimise();
+          return;
+        }
+        showToast('当前环境不支持窗口最小化');
+      });
+      $('window-close')?.addEventListener('click', () => {
+        if (window.runtime?.Quit) {
+          window.runtime.Quit();
+          return;
+        }
+        window.close();
+      });
+    }
 
+    bindWindowControls();
     document.querySelectorAll('[data-copy]').forEach(button => {
       button.addEventListener('click', () => {
         const data = state.status || {};

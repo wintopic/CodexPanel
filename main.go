@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"runtime"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -35,6 +36,7 @@ func main() {
 		MaxWidth:      desktopWindowWidth,
 		MaxHeight:     desktopWindowHeight,
 		DisableResize: true,
+		Frameless:     runtime.GOOS == "windows",
 		AssetServer: &assetserver.Options{
 			Assets:     publicFS,
 			Handler:    assetFallbackHandler{app: app},
