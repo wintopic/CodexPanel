@@ -72,6 +72,24 @@ jobs:
       - name: Build Node sidecar
         run: npm run wails:sidecar
 
+      - name: Build Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install innosetup --yes --no-progress
+          $isccCandidates = @(
+            "${env:LOCALAPPDATA}\Programs\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
+          )
+          $iscc = $isccCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+          if (-not $iscc) {
+            $iscc = (Get-Command ISCC.exe -ErrorAction Stop).Source
+          }
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          & $iscc "build/windows/CodexPanel.iss" "/DAppVersion=$version"
+
       - name: Package portable bundle
         shell: pwsh
         run: |

@@ -5,6 +5,7 @@
     "build:win": "npm run wails:build",
     "build:linux": "npm run wails:build",
     "build:desktop": "npm run wails:build",
+    "installer:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows-installer.ps1",
     "setup:ubuntu": "bash scripts/setup-ubuntu-dev.sh",
     "wails:dev": "node scripts/run-wails.js dev",
     "wails:build": "node scripts/run-wails.js build -clean",

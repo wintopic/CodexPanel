@@ -17,8 +17,9 @@ This repository contains the open local-control implementation:
 ## Current Status
 
 - Project name: `CodexPanel`
-- Desktop package: Wails portable bundle
-- Windows output: `CodexPanel.exe` plus `codexpanel-node-sidecar.exe`
+- Desktop package: Wails portable bundle plus Windows installer
+- Windows installer: `CodexPanel-Setup-<version>.exe`
+- Windows portable output: `CodexPanel.exe` plus `codexpanel-node-sidecar.exe`
 - Local panel: desktop WebView, no browser jump required
 - Remote control: browser/mobile page through LAN or Cloudflare relay
 - Local service controls: start and stop are handled by the desktop client
@@ -103,6 +104,7 @@ Desktop development:
 - Go 1.23+
 - Wails CLI v2.12+
 - Windows: Microsoft Edge WebView2 Runtime
+- Windows installer builds: Inno Setup 6
 - Linux: GTK/WebKitGTK development packages
 - macOS: Xcode command line tools
 
@@ -141,6 +143,27 @@ The portable desktop bundle is written to:
 ```text
 build/bin/
 ```
+
+Build the Windows installer:
+
+```powershell
+npm run installer:win
+```
+
+The installer is written to:
+
+```text
+dist/CodexPanel-Setup-<version>.exe
+```
+
+The portable Windows bundle contains two executables by design:
+
+- `CodexPanel.exe`: the desktop control panel users launch.
+- `codexpanel-node-sidecar.exe`: the bundled local service started and stopped
+  by `CodexPanel.exe`; users do not run it manually.
+
+For ordinary Windows users, publish the installer. Keep the portable zip for
+development, diagnostics, and no-install usage.
 
 ## Service Controls
 
@@ -218,10 +241,10 @@ Desktop release packaging is automated in:
 .github/workflows/windows-release.yml
 ```
 
-The workflow runs on every push to `main` and uploads portable desktop
-artifacts. Windows is packaged as `.zip`; Linux and macOS are packaged as
-`.tar.gz` so executable permissions survive extraction. It can also be run
-manually from the Actions tab.
+The workflow runs on every push to `main` and uploads desktop artifacts.
+Windows publishes both an installer `.exe` and a portable `.zip`; Linux and
+macOS are packaged as `.tar.gz` so executable permissions survive extraction.
+It can also be run manually from the Actions tab.
 
 When pushing a tag like `v3.0.5`, the workflow uploads the desktop bundles to a
 GitHub Release automatically.
@@ -244,10 +267,11 @@ windows/node-sidecar.js     Sidecar entrypoint
 
 build/
   appicon.png               Wails app icon source
-  windows/                  Windows Wails metadata and icon
+  windows/                  Windows Wails metadata, icon, installer script
 
 scripts/
   build-wails-sidecar.js    Packages the Node sidecar
+  build-windows-installer.ps1 Builds the Windows installer
   setup-ubuntu-dev.sh       Ubuntu development bootstrap
 
 cloudflare/
@@ -264,10 +288,11 @@ Before publishing a desktop build:
 3. Run `go test ./...`.
 4. Run `npm run wails:build`.
 5. Run `npm run wails:sidecar`.
-6. Verify the desktop panel shows the correct icon and project name.
-7. Verify service diagnostics are `8/8`.
-8. Verify `启动` and `停止` both work.
-9. Verify no user keys or local state are present in the portable bundle.
+6. On Windows, run `npm run installer:win`.
+7. Verify the desktop panel shows the correct icon and project name.
+8. Verify service diagnostics are `8/8`.
+9. Verify `启动` and `停止` both work.
+10. Verify no user keys or local state are present in the portable bundle or installer.
 
 ## License
 
