@@ -5,7 +5,7 @@ PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TOKEN="${MOBILE_TYPER_TOKEN:-}"
 PORT="${PORT:-8787}"
 LABEL="${CODEX_SERVICE_LABEL:-codex.local}"
-RELAY_URL="${CODEX_RELAY_URL:-https://codexpanel.pages.dev}"
+RELAY_URL="${CODEX_RELAY_URL:-}"
 RELAY_DEVICE_ID="${CODEX_RELAY_DEVICE_ID:-$(hostname | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+|-+$//g' | cut -c1-58)}"
 RELAY_DEVICE_ID="${RELAY_DEVICE_ID:-my-mac}"
 

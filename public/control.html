@@ -564,14 +564,14 @@
             <label for="setting-relay">Cloudflare 服务地址</label>
             <div class="input-box with-prefix">
               <span class="input-prefix" aria-hidden="true"><svg><use href="#icon-globe"></use></svg></span>
-              <input id="setting-relay" placeholder="https://codexpanel.pages.dev" spellcheck="false" autocomplete="off" />
+              <input id="setting-relay" spellcheck="false" autocomplete="off" />
               <button class="icon-btn" data-copy="relay" type="button" aria-label="复制 Cloudflare 服务地址" title="复制"><svg aria-hidden="true"><use href="#icon-copy"></use></svg></button>
             </div>
           </div>
           <div class="field">
             <label for="setting-key">远控密钥</label>
             <div class="input-box with-two-actions">
-              <input id="setting-key" type="password" placeholder="输入远控密钥" spellcheck="false" autocomplete="off" />
+              <input id="setting-key" type="password" spellcheck="false" autocomplete="off" />
               <button class="icon-btn" id="toggle-key" type="button" aria-label="显示或隐藏远控密钥" title="显示/隐藏"><svg aria-hidden="true"><use href="#icon-eye-off"></use></svg></button>
               <button class="icon-btn" data-copy="key" type="button" aria-label="复制远控密钥" title="复制"><svg aria-hidden="true"><use href="#icon-copy"></use></svg></button>
             </div>
@@ -633,7 +633,7 @@
       <div class="field">
         <label for="setting-port">服务端口</label>
         <div class="input-box">
-          <input id="setting-port" inputmode="numeric" placeholder="8787" />
+          <input id="setting-port" inputmode="numeric" />
         </div>
       </div>
 
@@ -716,10 +716,11 @@
       if (hour) return `${hour}小时 ${minute}分钟`;
       return `${Math.max(0, minute)}分钟`;
     }
-    function normalizeRelayUrl(value = '') {
-      const relayUrl = String(value || '').trim().replace(/\/+$/, '');
-      const legacyRelayUrl = `https://${['codex', 'relay'].join('-')}.pages.dev`;
-      return relayUrl === legacyRelayUrl ? 'https://codexpanel.pages.dev' : relayUrl;
+    function relayUrlValue(value = '') {
+      return String(value || '');
+    }
+    function relayUrlBase(value = '') {
+      return relayUrlValue(value).trim().replace(/\/+$/, '');
     }
     function fallbackStatus(message = '后端更新后可显示完整服务状态') {
       const port = location.port || (location.protocol === 'https:' ? '443' : '80');
@@ -738,7 +739,7 @@
       };
     }
     function remoteBaseFromRelayUrl(relayUrl = '', deviceId = '') {
-      const base = normalizeRelayUrl(relayUrl);
+      const base = relayUrlBase(relayUrl);
       const device = String(deviceId || '').trim();
       if (!base || !device) return '';
       try {
@@ -752,14 +753,13 @@
       }
     }
     function remoteUrlFromFields() {
-      const relayUrl = normalizeRelayUrl($('setting-relay').value);
+      const relayUrl = relayUrlValue($('setting-relay').value);
       const remoteKey = $('setting-key').value.trim();
       const remoteBase = remoteBaseFromRelayUrl(relayUrl, $('setting-device').value);
       return remoteBase && remoteKey ? `${remoteBase}/?token=${encodeURIComponent(remoteKey)}` : '';
     }
     function updateRemotePreview() {
       const status = state.status || {};
-      const relayUrl = normalizeRelayUrl($('setting-relay').value);
       const remoteKey = $('setting-key').value.trim();
       const activeRemoteUrl = status.relayConfigured && status.remoteUrl ? status.remoteUrl : '';
       const previewRemoteUrl = remoteUrlFromFields();
@@ -776,8 +776,8 @@
       }
     }
     async function copyText(value, label) {
-      const text = String(value || '').trim();
-      if (!text) return showToast(`${label}为空`);
+      const text = String(value || '');
+      if (!text.trim()) return showToast(`${label}为空`);
       await navigator.clipboard.writeText(text);
       showToast(`已复制${label}`);
     }
@@ -918,7 +918,7 @@
       const device = effective.deviceId || config.deviceId || $('setting-device').value || '';
       $('setting-device').value = device;
       $('device-id').textContent = device || '--';
-      if (Object.prototype.hasOwnProperty.call(config, 'relayUrl')) $('setting-relay').value = normalizeRelayUrl(config.relayUrl);
+      if (Object.prototype.hasOwnProperty.call(config, 'relayUrl')) $('setting-relay').value = relayUrlValue(config.relayUrl);
       if (Object.prototype.hasOwnProperty.call(config, 'remoteKey')) $('setting-key').value = config.remoteKey || '';
       updateRemotePreview();
     }
@@ -973,11 +973,12 @@
     async function saveSettings() {
       const settings = {
         port: $('setting-port').value.trim(),
-        relayUrl: normalizeRelayUrl($('setting-relay').value),
+        relayUrl: relayUrlValue($('setting-relay').value),
         remoteKey: $('setting-key').value.trim(),
         remoteKeyMode: 'manual',
       };
-      if ((settings.relayUrl && !settings.remoteKey) || (!settings.relayUrl && settings.remoteKey)) {
+      const relayConfigured = Boolean(settings.relayUrl.trim());
+      if ((relayConfigured && !settings.remoteKey) || (!relayConfigured && settings.remoteKey)) {
         showToast('远控地址和远控密钥需要同时填写');
         return;
       }

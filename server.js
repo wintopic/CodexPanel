@@ -17,8 +17,7 @@ const STATE_FILE = path.join(STATE_DIR, 'state.json');
 const STARTUP_CONTROL_CONFIG = readStartupControlConfig();
 const TOKEN = process.env.MOBILE_TYPER_TOKEN || crypto.randomBytes(12).toString('base64url');
 const REMOTE_ACCESS_KEY = normalizeRemoteAccessKey(process.env.CODEX_REMOTE_KEY || STARTUP_CONTROL_CONFIG.remoteKey || '');
-const DEFAULT_RELAY_URL = String(process.env.CODEX_DEFAULT_RELAY_URL || '').trim().replace(/\/+$/, '');
-const RELAY_URL = String(process.env.CODEX_RELAY_URL || STARTUP_CONTROL_CONFIG.relayUrl || DEFAULT_RELAY_URL).trim().replace(/\/+$/, '');
+const RELAY_URL = String(process.env.CODEX_RELAY_URL || STARTUP_CONTROL_CONFIG.relayUrl || '').trim().replace(/\/+$/, '');
 const RELAY_DEVICE_ID = String(process.env.CODEX_RELAY_DEVICE_ID || defaultRelayDeviceId()).trim();
 const RELAY_LOCAL_BASE = String(process.env.CODEX_RELAY_LOCAL_BASE || `http://127.0.0.1:${PORT}`).trim().replace(/\/+$/, '');
 const RELAY_AGENT_CONCURRENCY = Math.max(1, Math.min(8, Number(process.env.CODEX_RELAY_CONCURRENCY || 1)));
@@ -157,9 +156,6 @@ const RELAY_HOP_BY_HOP_HEADERS = new Set([
   'upgrade',
 ]);
 
-function legacyRelayUrl() {
-  return `https://${['codex', 'relay'].join('-')}.pages.dev`;
-}
 const recentSendRequests = new Map();
 let lastCodexThreadActivation = { threadId: '', at: 0 };
 let codexSessionFilesCache = { at: 0, files: [] };
@@ -361,10 +357,10 @@ function emptyCodexState() {
 function normalizeControlConfig(value = {}) {
   const input = value && typeof value === 'object' ? value : {};
   const port = Number(input.port);
-  const relayUrl = String(input.relayUrl || '').trim().replace(/\/+$/, '');
+  const relayUrl = String(input.relayUrl || '');
   return {
     port: Number.isInteger(port) && port > 0 && port <= 65535 ? port : '',
-    relayUrl: (relayUrl === legacyRelayUrl() ? 'https://codexpanel.pages.dev' : relayUrl).slice(0, 240),
+    relayUrl: relayUrl.slice(0, 240),
     deviceId: defaultRelayDeviceId(),
     remoteKeyMode: 'manual',
     remoteKey: normalizeRemoteAccessKey(input.remoteKey || ''),

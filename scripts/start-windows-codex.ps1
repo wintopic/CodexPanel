@@ -1,6 +1,6 @@
 param(
   [int]$Port = 8787,
-  [string]$RelayUrl = "https://codexpanel.pages.dev",
+  [string]$RelayUrl = "",
   [string]$DeviceId = "",
   [string]$RemoteKey = "",
   [string]$Token = "",
@@ -54,7 +54,11 @@ if (-not $RemoteKey -and $env:CODEX_REMOTE_KEY) {
 }
 
 $env:PORT = [string]$Port
-$env:CODEX_RELAY_URL = $RelayUrl.TrimEnd("/")
+if ($RelayUrl) {
+  $env:CODEX_RELAY_URL = $RelayUrl
+} else {
+  Remove-Item Env:\CODEX_RELAY_URL -ErrorAction SilentlyContinue
+}
 $env:CODEX_RELAY_DEVICE_ID = $DeviceId
 $env:CODEX_RELAY_CONCURRENCY = [string]$RelayConcurrency
 $env:CODEX_RELAY_POLL_TIMEOUT_MS = [string]$RelayPollTimeoutMs
@@ -70,7 +74,12 @@ Write-Host "Starting CodexPanel local service..."
 Write-Host "Project: $projectDir"
 Write-Host "Local:   http://localhost:$Port/"
 Write-Host "Control: http://localhost:$Port/control.html"
-Write-Host "Remote:  $($env:CODEX_RELAY_URL)/remote/$DeviceId/"
-Write-Host "Remote Control: $($env:CODEX_RELAY_URL)/remote/$DeviceId/control.html"
+if ($env:CODEX_RELAY_URL) {
+  $relayBase = $env:CODEX_RELAY_URL.TrimEnd("/")
+  Write-Host "Remote:  $relayBase/remote/$DeviceId/"
+  Write-Host "Remote Control: $relayBase/remote/$DeviceId/control.html"
+} else {
+  Write-Host "Remote:  not configured"
+}
 
 node server.js
