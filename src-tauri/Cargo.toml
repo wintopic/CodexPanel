@@ -1,0 +1,16 @@
+[package]
+name = "codexpanel-desktop"
+version = "3.0.5"
+description = "CodexPanel local desktop control panel"
+authors = ["CodexPanel"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+rand = "0.9"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"

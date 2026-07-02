@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "CodexPanel",
+  "version": "3.0.5",
+  "identifier": "local.codexpanel.desktop",
+  "build": {
+    "beforeBuildCommand": "npm run tauri:sidecar",
+    "beforeDevCommand": "npm run tauri:sidecar",
+    "frontendDist": "../public"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "category": "DeveloperTool",
+    "copyright": "Copyright (c) 2026",
+    "externalBin": ["bin/codexpanel-node-sidecar"],
+    "icon": [
+      "../public/icons/icon-32.png",
+      "../public/icons/icon-128.png",
+      "../public/icons/icon-192.png",
+      "../public/icons/icon-512.png",
+      "../public/icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      },
+      "nsis": {
+        "installerIcon": "../public/icons/icon.ico",
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

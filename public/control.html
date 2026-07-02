@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=codexpanel-3.0.5-20260702-1" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=codexpanel-3.0.5-20260702-1" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=codexpanel-3.0.5-20260702-1" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png?v=codexpanel-3.0.5-20260702-1" />
+  <link rel="shortcut icon" href="favicon.ico?v=codexpanel-3.0.5-20260702-1" />
+  <title>CodexPanel 控制面板</title>
+  <style>
+    :root {
+      --bg: #eef3fb;
+      --shell: rgba(248, 251, 255, .92);
+      --card: rgba(255, 255, 255, .94);
+      --soft: #f4f7fb;
+      --line: rgba(36, 48, 72, .11);
+      --line-2: rgba(36, 48, 72, .18);
+      --ink: #070b18;
+      --muted: #657085;
+      --faint: #aeb7c8;
+      --danger: #bf3434;
+      --blue: #245bff;
+      --green: #31c77a;
+      --teal: #0f9f93;
+      --shadow: 0 1px 2px rgba(70, 91, 126, .08);
+      --soft-shadow: 0 1px 2px rgba(70, 91, 126, .07);
+      --icon-stroke: 2.15;
+      color-scheme: light;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Text", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); color: var(--ink); }
+    body {
+      height: 100vh;
+      padding: 2px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #f8fbff, #edf3fb);
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: var(--icon-stroke); stroke-linecap: round; stroke-linejoin: round; }
+    .icon-sprite { position: absolute; width: 0 !important; height: 0 !important; overflow: hidden; }
+    h1, h2, h3, p { margin: 0; }
+
+    .shell {
+      width: min(748px, calc(100vw - 4px));
+      height: auto;
+      max-height: calc(100vh - 4px);
+      margin: 0 auto;
+      padding: 6px 10px;
+      display: grid;
+      grid-template-rows: auto auto auto;
+      row-gap: 5px;
+      border: 1px solid rgba(42, 58, 88, .12);
+      border-radius: 16px;
+      background: var(--shell);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    .top {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+    .logo {
+      width: 20px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 8px;
+      background: transparent;
+    }
+    .logo img {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+    h1 {
+      font-size: 18px;
+      line-height: 1.1;
+      font-weight: 850;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+    .panel {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 5px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      box-shadow: var(--soft-shadow);
+      overflow: hidden;
+    }
+    .main-card {
+      min-height: 0;
+      padding: 8px 10px;
+      display: grid;
+      align-content: start;
+      gap: 6px;
+    }
+    .core-card {
+      border-color: rgba(11, 11, 12, .11);
+      background: rgba(255,255,255,.9);
+    }
+    .service-bar {
+      min-height: 42px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.9);
+      box-shadow: var(--soft-shadow);
+    }
+    .service-state {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 7px;
+      align-items: center;
+      padding: 0 3px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: currentColor;
+      box-shadow: 0 0 0 3px rgba(49,199,122,.16);
+    }
+    .service-state-value {
+      margin-top: 2px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+    body[data-service="running"] .service-state-value .dot { color: var(--green); }
+    body[data-service="stopped"] .service-state-value { color: #6b7280; }
+    body[data-service="stopped"] .service-state-value .dot { color: #9aa3b2; box-shadow: 0 0 0 3px rgba(154,163,178,.15); }
+    body[data-service="error"] .service-state-value { color: var(--danger); }
+    body[data-service="error"] .service-state-value .dot { color: var(--danger); box-shadow: 0 0 0 3px rgba(191,52,52,.14); }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: nowrap;
+    }
+    .btn {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 0 13px;
+      border: 1px solid var(--line-2);
+      border-radius: 10px;
+      background: rgba(255,255,255,.86);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 760;
+      line-height: 1;
+      white-space: nowrap;
+      box-shadow: none;
+    }
+    .btn svg { width: 16px; height: 16px; }
+    .btn.primary {
+      min-width: 86px;
+      border-color: rgba(36,91,255,.3);
+      color: #fff;
+      background: linear-gradient(145deg, #2177ff, #2835f2);
+      box-shadow: 0 1px 2px rgba(36,91,255,.18);
+    }
+    .btn.stop {
+      min-width: 86px;
+      border-color: rgba(11, 11, 12, .18);
+      color: #fff;
+      background: linear-gradient(145deg, #202532, #070b18);
+      box-shadow: 0 1px 2px rgba(7, 11, 24, .18);
+    }
+    .btn.ghost { min-width: 82px; }
+    .btn:disabled { opacity: .82; cursor: not-allowed; }
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px 10px;
+    }
+    .core-card .config-grid {
+      gap: 5px 10px;
+    }
+    .field {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+    label {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 820;
+      white-space: nowrap;
+    }
+    .input-box {
+      min-height: 31px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 7px;
+      align-items: center;
+      padding: 0 8px;
+      border: 1px solid var(--line-2);
+      border-radius: 10px;
+      background: rgba(255,255,255,.9);
+      box-shadow: none;
+    }
+    .core-card .input-box {
+      min-height: 31px;
+      border-color: rgba(11,11,12,.16);
+      background: rgba(255,255,255,.9);
+      box-shadow: none;
+    }
+    .input-box.with-prefix { grid-template-columns: 25px minmax(0, 1fr) 22px; padding-left: 6px; }
+    .input-box.with-two-actions { grid-template-columns: minmax(0, 1fr) auto auto; }
+    .input-prefix {
+      width: 25px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: #eef2f8;
+      color: var(--ink);
+    }
+    .input-prefix svg { width: 15px; height: 15px; }
+    input {
+      width: 100%;
+      min-width: 0;
+      height: 22px;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--ink);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    input::placeholder { color: var(--faint); }
+    input[readonly] { cursor: default; color: var(--muted); }
+    .input-box:focus-within {
+      border-color: rgba(0,0,0,.34);
+      box-shadow: 0 0 0 3px rgba(36,91,255,.08);
+    }
+    .icon-btn {
+      width: 21px;
+      height: 21px;
+      display: inline-grid;
+      place-items: center;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--ink);
+      padding: 0;
+    }
+    .icon-btn svg { width: 15px; height: 15px; }
+    .icon-btn:hover { background: rgba(0,0,0,.055); }
+    .links {
+      display: grid;
+      gap: 5px;
+    }
+    .core-card .links {
+      gap: 5px;
+    }
+    .link-row {
+      min-height: 33px;
+      display: grid;
+      grid-template-columns: 26px 78px minmax(0, 1fr) 22px;
+      gap: 7px;
+      align-items: center;
+      padding: 3px 8px 3px 6px;
+      border: 1px solid var(--line-2);
+      border-radius: 10px;
+      background: rgba(248,250,253,.82);
+    }
+    .core-card .link-row {
+      min-height: 33px;
+      grid-template-columns: 26px 78px minmax(0, 1fr) 22px;
+      border-color: rgba(11,11,12,.13);
+      background: rgba(248,250,253,.82);
+      box-shadow: none;
+    }
+    .link-icon,
+    .stat-icon {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: #eef2f8;
+      color: var(--ink);
+      box-shadow: none;
+    }
+    .service-bar .stat-icon { width: 28px; height: 28px; }
+    .links .link-row:nth-child(1) .link-icon { background: #e6efff; color: var(--blue); }
+    .links .link-row:nth-child(2) .link-icon { background: #dff8f2; color: var(--teal); }
+    .link-icon { width: 26px; height: 26px; }
+    .link-icon svg, .stat-icon svg { width: 15px; height: 15px; }
+    .link-label {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 830;
+      white-space: nowrap;
+    }
+    .link-value {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 520;
+    }
+    .info-bar {
+      min-height: 40px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: center;
+      gap: 0;
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.9);
+      box-shadow: var(--soft-shadow);
+    }
+    .stat {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr);
+      gap: 7px;
+      align-items: center;
+      padding: 0 11px;
+      border-right: 1px solid var(--line);
+    }
+    .stat:last-child { border-right: 0; }
+    .info-bar .stat:nth-child(1) .stat-icon { background: #eaf1ff; color: var(--blue); }
+    .info-bar .stat:nth-child(2) .stat-icon { background: #eee8ff; color: #324cff; }
+    .info-bar .stat:nth-child(3) .stat-icon { background: #ddf8f0; color: var(--teal); }
+    .info-bar .stat-icon { width: 26px; height: 26px; }
+    .stat-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+    .stat-value {
+      margin-top: 2px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 850;
+    }
+    .settings-modal[hidden] { display: none; }
+    .settings-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+    }
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(18, 18, 18, .22);
+      backdrop-filter: blur(10px);
+    }
+    .modal-card {
+      position: relative;
+      width: min(520px, 100%);
+      max-height: min(520px, calc(100vh - 28px));
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 12px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.62);
+      border-radius: 16px;
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      overflow: hidden;
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .modal-head h2 {
+      font-size: 18px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+    .modal-card .field .input-box { min-height: 40px; }
+    .diagnostics {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 9px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.62);
+      overflow: hidden;
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      white-space: nowrap;
+    }
+    .section-head h3 {
+      font-size: 17px;
+      font-weight: 800;
+    }
+    .check-count {
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 850;
+    }
+    .checks {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px 12px;
+      align-content: start;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .check {
+      min-height: 30px;
+      display: grid;
+      grid-template-columns: 22px minmax(0,1fr) auto;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .check-icon {
+      width: 20px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+    }
+    .check-icon svg { width: 18px; height: 18px; }
+    .check-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .check strong {
+      min-width: 56px;
+      min-height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 0 8px;
+      border: 1px solid rgba(0,0,0,.12);
+      border-radius: 999px;
+      background: #f2f1ee;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .check strong svg { width: 12px; height: 12px; }
+    .check.bad strong { color: var(--danger); }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 60;
+      display: none;
+      max-width: min(360px, calc(100vw - 32px));
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.94);
+      box-shadow: 0 1px 2px rgba(70, 91, 126, .08);
+      color: var(--ink);
+      font-size: 14px;
+    }
+    .toast.show { display: block; }
+
+  </style>
+</head>
+<body data-service="loading">
+  <svg class="icon-sprite" data-icon-set="lucide" aria-hidden="true" focusable="false">
+    <symbol id="icon-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"></polygon></symbol>
+    <symbol id="icon-square" viewBox="0 0 24 24"><rect width="12" height="12" x="6" y="6" rx="2"></rect></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+    <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .6-.92l7-3a1 1 0 0 1 .8 0l7 3a1 1 0 0 1 .6.92z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+    <symbol id="icon-save" viewBox="0 0 24 24"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></symbol>
+    <symbol id="icon-monitor" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></symbol>
+    <symbol id="icon-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+    <symbol id="icon-list" viewBox="0 0 24 24"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></symbol>
+    <symbol id="icon-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"></path><path d="m8 6-6 6 6 6"></path></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></symbol>
+    <symbol id="icon-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.08-7.08l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.08 7.08l1.71-1.71"></path></symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></symbol>
+    <symbol id="icon-check-circle" viewBox="0 0 24 24"><path d="M21.8 10A10 10 0 1 1 17 3.3"></path><path d="m9 11 3 3L22 4"></path></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7C3.4 7.6 7.24 5 12 5s8.6 2.6 9.94 6.65a1 1 0 0 1 0 .7C20.6 16.4 16.76 19 12 19s-8.6-2.6-9.94-6.65Z"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+    <symbol id="icon-eye-off" viewBox="0 0 24 24"><path d="m2 2 20 20"></path><path d="M10.73 5.08A10.74 10.74 0 0 1 12 5c4.76 0 8.6 2.6 9.94 6.65a1 1 0 0 1 0 .7 13 13 0 0 1-1.67 2.04"></path><path d="M6.61 6.61A12.9 12.9 0 0 0 2.06 11.65a1 1 0 0 0 0 .7C3.4 16.4 7.24 19 12 19a10.7 10.7 0 0 0 5.39-1.61"></path><path d="M9.88 9.88a3 3 0 0 0 4.24 4.24"></path></symbol>
+    <symbol id="icon-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+    <symbol id="icon-cpu" viewBox="0 0 24 24"><rect width="16" height="16" x="4" y="4" rx="2"></rect><rect width="6" height="6" x="9" y="9" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+  </svg>
+
+  <div class="shell">
+    <header class="top">
+      <div class="logo" aria-hidden="true"><img src="icons/icon-64.png?v=codexpanel-3.0.5-20260702-1" alt="" /></div>
+      <h1>CodexPanel 控制面板</h1>
+    </header>
+
+    <section class="service-bar" aria-label="服务状态">
+      <div class="service-state">
+        <span class="stat-icon" aria-hidden="true"><svg><use href="#icon-activity"></use></svg></span>
+        <div>
+          <div class="stat-label">服务状态</div>
+          <div class="service-state-value"><span class="dot"></span><span id="service-status">读取中</span></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn primary service-action" data-action="start" type="button"><svg aria-hidden="true"><use href="#icon-play"></use></svg><span class="service-action-label">启动</span></button>
+        <button class="btn ghost" id="settings-open" type="button"><svg aria-hidden="true"><use href="#icon-settings"></use></svg>设置</button>
+      </div>
+    </section>
+
+    <main class="panel">
+      <section class="card main-card core-card">
+        <section class="config-grid">
+          <div class="field">
+            <label for="setting-relay">Cloudflare 服务地址</label>
+            <div class="input-box with-prefix">
+              <span class="input-prefix" aria-hidden="true"><svg><use href="#icon-globe"></use></svg></span>
+              <input id="setting-relay" placeholder="https://codexpanel.pages.dev" spellcheck="false" autocomplete="off" />
+              <button class="icon-btn" data-copy="relay" type="button" aria-label="复制 Cloudflare 服务地址" title="复制"><svg aria-hidden="true"><use href="#icon-copy"></use></svg></button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="setting-key">远控密钥</label>
+            <div class="input-box with-two-actions">
+              <input id="setting-key" type="password" placeholder="输入远控密钥" spellcheck="false" autocomplete="off" />
+              <button class="icon-btn" id="toggle-key" type="button" aria-label="显示或隐藏远控密钥" title="显示/隐藏"><svg aria-hidden="true"><use href="#icon-eye-off"></use></svg></button>
+              <button class="icon-btn" data-copy="key" type="button" aria-label="复制远控密钥" title="复制"><svg aria-hidden="true"><use href="#icon-copy"></use></svg></button>
+            </div>
+          </div>
+        </section>
+
+        <section class="links">
+          <div class="link-row">
+            <span class="link-icon" aria-hidden="true"><svg><use href="#icon-globe"></use></svg></span>
+            <span class="link-label">本地入口</span>
+            <span class="link-value" id="lan-url">未获取</span>
+            <button class="icon-btn" data-copy="lan" type="button" aria-label="复制本地入口" title="复制"><svg aria-hidden="true"><use href="#icon-copy"></use></svg></button>
+          </div>
+          <div class="link-row">
+            <span class="link-icon" aria-hidden="true"><svg><use href="#icon-shield"></use></svg></span>
+            <span class="link-label">远控入口</span>
+            <span class="link-value" id="remote-url">未配置</span>
+            <button class="icon-btn" data-copy="remote" type="button" aria-label="复制远控入口" title="复制"><svg aria-hidden="true"><use href="#icon-copy"></use></svg></button>
+          </div>
+        </section>
+
+        <input id="setting-device" type="hidden" />
+      </section>
+
+      <section class="info-bar" aria-label="运行信息">
+        <div class="stat">
+          <span class="stat-icon" aria-hidden="true"><svg><use href="#icon-clock"></use></svg></span>
+          <div>
+            <div class="stat-label">运行时间</div>
+            <div class="stat-value" id="uptime">--</div>
+          </div>
+        </div>
+        <div class="stat">
+          <span class="stat-icon" aria-hidden="true"><svg><use href="#icon-monitor"></use></svg></span>
+          <div>
+            <div class="stat-label">设备 ID</div>
+            <div class="stat-value" id="device-id">--</div>
+          </div>
+        </div>
+        <div class="stat">
+          <span class="stat-icon" aria-hidden="true"><svg><use href="#icon-cpu"></use></svg></span>
+          <div>
+            <div class="stat-label">PID</div>
+            <div class="stat-value" id="pid">--</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <section class="settings-modal" id="settings-modal" hidden>
+    <div class="modal-backdrop" data-close-settings></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <header class="modal-head">
+        <h2 id="settings-title">设置</h2>
+        <button class="icon-btn" id="settings-close" type="button" aria-label="关闭设置"><svg aria-hidden="true"><use href="#icon-x"></use></svg></button>
+      </header>
+
+      <div class="field">
+        <label for="setting-port">服务端口</label>
+        <div class="input-box">
+          <input id="setting-port" inputmode="numeric" placeholder="8787" />
+        </div>
+      </div>
+
+      <section class="diagnostics">
+        <div class="section-head">
+          <h3>服务诊断</h3>
+          <strong class="check-count" id="check-summary">未检查</strong>
+        </div>
+        <div class="checks" id="service-checks"></div>
+      </section>
+
+      <div class="modal-actions">
+        <button class="btn primary" id="save-settings" type="button"><svg aria-hidden="true"><use href="#icon-save"></use></svg>保存配置</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const query = new URLSearchParams(location.search);
+    const token = query.get('token') || localStorage.getItem('codex.controlToken') || '';
+    if (token) localStorage.setItem('codex.controlToken', token);
+    const state = { status: null, checks: [], config: null };
+
+    function basePath() {
+      const match = location.pathname.match(/^\/remote\/[^/]+/);
+      return match ? match[0] : '';
+    }
+    function isRemotePage() {
+      return Boolean(basePath());
+    }
+    function api(path) {
+      const sep = path.includes('?') ? '&' : '?';
+      return `${basePath()}${path}${sep}token=${encodeURIComponent(token)}`;
+    }
+    function authFetch(path, options = {}) {
+      return fetch(api(path), {
+        cache: 'no-store',
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          ...(token ? { 'x-codex-token': token } : {}),
+        },
+      });
+    }
+    function showToast(message) {
+      const toast = $('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+    function sleep(ms) {
+      return new Promise(resolve => window.setTimeout(resolve, ms));
+    }
+    function desktopInvoke(command, payload = {}) {
+      const invoke = window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
+      if (!invoke) throw new Error('当前页面没有桌面客户端权限，请从 CodexPanel 桌面窗口操作。');
+      return invoke(command, payload);
+    }
+    function formatUptime(seconds = 0) {
+      const hour = Math.floor(seconds / 3600);
+      const minute = Math.floor((seconds % 3600) / 60);
+      if (hour) return `${hour}小时 ${minute}分钟`;
+      return `${Math.max(0, minute)}分钟`;
+    }
+    function normalizeRelayUrl(value = '') {
+      const relayUrl = String(value || '').trim().replace(/\/+$/, '');
+      const legacyRelayUrl = `https://${['codex', 'relay'].join('-')}.pages.dev`;
+      return relayUrl === legacyRelayUrl ? 'https://codexpanel.pages.dev' : relayUrl;
+    }
+    function fallbackStatus(message = '后端更新后可显示完整服务状态') {
+      const port = location.port || (location.protocol === 'https:' ? '443' : '80');
+      const localBase = isRemotePage() ? '' : location.origin;
+      return {
+        ok: true,
+        status: 'running',
+        hostname: location.hostname,
+        port,
+        uptimeSec: 0,
+        localUrl: localBase ? `${localBase}/` : '',
+        remoteUrl: '',
+        remoteAccessKey: '',
+        fallbackMessage: message,
+        settings: { port, deviceId: '', relayUrl: '' },
+      };
+    }
+    function remoteBaseFromRelayUrl(relayUrl = '', deviceId = '') {
+      const base = normalizeRelayUrl(relayUrl);
+      const device = String(deviceId || '').trim();
+      if (!base || !device) return '';
+      try {
+        const url = new URL(base);
+        url.pathname = `/remote/${encodeURIComponent(device)}`;
+        url.search = '';
+        url.hash = '';
+        return url.toString().replace(/\/+$/, '');
+      } catch {
+        return `${base}/remote/${encodeURIComponent(device)}`.replace(/\/+$/, '');
+      }
+    }
+    function remoteUrlFromFields() {
+      const relayUrl = normalizeRelayUrl($('setting-relay').value);
+      const remoteKey = $('setting-key').value.trim();
+      const remoteBase = remoteBaseFromRelayUrl(relayUrl, $('setting-device').value);
+      return remoteBase && remoteKey ? `${remoteBase}/?token=${encodeURIComponent(remoteKey)}` : '';
+    }
+    function updateRemotePreview() {
+      const status = state.status || {};
+      const relayUrl = normalizeRelayUrl($('setting-relay').value);
+      const remoteKey = $('setting-key').value.trim();
+      const activeRemoteUrl = status.relayConfigured && status.remoteUrl ? status.remoteUrl : '';
+      const previewRemoteUrl = remoteUrlFromFields();
+
+      if (activeRemoteUrl) {
+        $('remote-url').textContent = activeRemoteUrl;
+        $('remote-url').title = '远控入口已生效';
+      } else if (previewRemoteUrl) {
+        $('remote-url').textContent = previewRemoteUrl;
+        $('remote-url').title = '保存并启动本地服务后生效';
+      } else {
+        $('remote-url').textContent = '未配置';
+        $('remote-url').title = '';
+      }
+    }
+    async function copyText(value, label) {
+      const text = String(value || '').trim();
+      if (!text) return showToast(`${label}为空`);
+      await navigator.clipboard.writeText(text);
+      showToast(`已复制${label}`);
+    }
+    async function loadStatus() {
+      const response = await authFetch('/codex/control-status');
+      if (response.status === 404) {
+        const data = fallbackStatus();
+        state.status = data;
+        renderStatus(data);
+        return;
+      }
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '读取服务状态失败');
+      state.status = data;
+      renderStatus(data);
+    }
+    async function loadControlConfig() {
+      const response = await authFetch('/codex/control-config');
+      if (response.status === 404) return;
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '读取配置失败');
+      state.config = data.config || {};
+      applyConfig(data.config || {}, data.effective || {});
+    }
+    async function loadServiceChecks() {
+      const list = $('service-checks');
+      const response = await authFetch('/codex/service-check');
+      if (response.status === 404) {
+        $('check-summary').textContent = '待启动';
+        renderServiceChecks([{ key: 'alert', label: '服务自检', ok: false, status: '待启动' }]);
+        return;
+      }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || '服务自检失败');
+      state.checks = data.checks || [];
+      $('check-summary').textContent = `${data.passed}/${data.total}`;
+      renderServiceChecks(state.checks);
+    }
+    function createIcon(symbolId) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+      use.setAttribute('href', `#${symbolId}`);
+      svg.setAttribute('aria-hidden', 'true');
+      svg.appendChild(use);
+      return svg;
+    }
+    function serviceCheckIcon(key = '') {
+      const icons = {
+        static: 'icon-monitor',
+        health: 'icon-activity',
+        config: 'icon-settings',
+        control: 'icon-shield',
+        threads: 'icon-list',
+        codexStatus: 'icon-code',
+        keepAwake: 'icon-clock',
+        relay: 'icon-link',
+        alert: 'icon-alert',
+      };
+      return icons[key] || 'icon-check-circle';
+    }
+    function renderServiceChecks(checks) {
+      const list = $('service-checks');
+      list.textContent = '';
+      for (const item of checks) {
+        const row = document.createElement('div');
+        row.className = `check ${item.ok ? 'ok' : 'bad'}`;
+        const icon = document.createElement('span');
+        icon.className = 'check-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.appendChild(createIcon(serviceCheckIcon(item.key)));
+        const name = document.createElement('span');
+        name.className = 'check-name';
+        name.textContent = item.label || item.key || '服务';
+        const status = document.createElement('strong');
+        status.appendChild(createIcon(item.ok ? 'icon-check-circle' : 'icon-alert'));
+        status.append(document.createTextNode(item.status || (item.ok ? '正常' : '异常')));
+        row.append(icon, name, status);
+        list.appendChild(row);
+      }
+    }
+    function serviceActionButton() {
+      return document.querySelector('.service-action');
+    }
+    function updateServiceAction(running, busy = false) {
+      const button = serviceActionButton();
+      if (!button) return;
+      const action = running ? 'stop' : 'start';
+      button.dataset.action = action;
+      button.disabled = busy;
+      button.classList.toggle('primary', !running);
+      button.classList.toggle('stop', running);
+      button.querySelector('use')?.setAttribute('href', running ? '#icon-square' : '#icon-play');
+      const label = button.querySelector('.service-action-label');
+      if (label) label.textContent = running ? '停止' : '启动';
+      button.setAttribute('aria-label', running ? '停止本地服务' : '启动本地服务');
+      button.title = running ? '停止本地服务' : '启动本地服务';
+    }
+    function renderStoppedStatus(result = {}) {
+      state.status = {
+        ...(state.status || {}),
+        status: 'stopped',
+        pid: '',
+        uptimeSec: 0,
+        localUrl: '',
+        remoteUrl: '',
+        port: result.port || state.status?.port || location.port || '',
+      };
+      document.body.dataset.service = 'stopped';
+      $('service-status').textContent = '未运行';
+      $('lan-url').textContent = '服务已停止';
+      $('lan-url').title = '';
+      $('remote-url').textContent = '服务已停止';
+      $('remote-url').title = '';
+      $('uptime').textContent = '--';
+      $('pid').textContent = '--';
+      updateServiceAction(false);
+    }
+    function renderStatus(data) {
+      const running = data.status === 'running';
+      document.body.dataset.service = running ? 'running' : 'stopped';
+      $('service-status').textContent = running ? '运行中' : '未运行';
+      const deviceLabel = data.settings?.deviceId || data.relayDeviceId || data.hostname || 'localhost';
+      $('lan-url').textContent = data.localUrl || '未获取';
+      $('remote-url').textContent = data.remoteUrl || '未配置';
+      $('uptime').textContent = formatUptime(data.uptimeSec || 0);
+      $('pid').textContent = data.pid ? String(data.pid) : '--';
+      $('device-id').textContent = deviceLabel || '--';
+      const savedConfig = data.settings?.savedControlConfig || {};
+      $('setting-port').value = savedConfig.port || data.settings?.port || '';
+      $('setting-device').value = data.settings?.deviceId || savedConfig.deviceId || deviceLabel || '';
+      $('setting-relay').value = savedConfig.relayUrl || '';
+      $('setting-key').value = savedConfig.remoteKey || '';
+      updateServiceAction(running);
+      updateRemotePreview();
+    }
+    function applyConfig(config = {}, effective = {}) {
+      if (Object.prototype.hasOwnProperty.call(config, 'port') && config.port) $('setting-port').value = config.port;
+      const device = effective.deviceId || config.deviceId || $('setting-device').value || '';
+      $('setting-device').value = device;
+      $('device-id').textContent = device || '--';
+      if (Object.prototype.hasOwnProperty.call(config, 'relayUrl')) $('setting-relay').value = normalizeRelayUrl(config.relayUrl);
+      if (Object.prototype.hasOwnProperty.call(config, 'remoteKey')) $('setting-key').value = config.remoteKey || '';
+      updateRemotePreview();
+    }
+    function openSettings() {
+      $('settings-modal').hidden = false;
+      loadServiceChecks().catch(error => showToast(error.message));
+    }
+    function closeSettings() {
+      $('settings-modal').hidden = true;
+    }
+    async function syncAfterServiceControl(result = {}) {
+      if (result.action === 'stop') {
+        renderStoppedStatus(result);
+        return;
+      }
+      const nextUrl = result.control_url || '';
+      if (nextUrl) {
+        try {
+          const url = new URL(nextUrl);
+          if (url.origin !== location.origin) {
+            location.href = nextUrl;
+            return;
+          }
+        } catch {}
+      }
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        try {
+          await Promise.all([loadStatus(), loadControlConfig(), loadServiceChecks()]);
+          return;
+        } catch {
+          await sleep(500);
+        }
+      }
+      throw new Error('服务已操作，但状态同步超时。');
+    }
+    async function runServiceControl() {
+      const button = serviceActionButton();
+      const action = button?.dataset.action || (state.status?.status === 'running' ? 'stop' : 'start');
+      if (button?.disabled) return;
+      updateServiceAction(action === 'stop', true);
+      showToast(action === 'stop' ? '正在停止本地服务...' : '正在启动本地服务...');
+      try {
+        const result = await desktopInvoke('control_service', { action });
+        await syncAfterServiceControl(result);
+        showToast(result.message || (action === 'stop' ? '停止完成' : '启动完成'));
+      } catch (error) {
+        showToast(error?.message || String(error));
+      } finally {
+        updateServiceAction(state.status?.status === 'running');
+      }
+    }
+    async function saveSettings() {
+      const settings = {
+        port: $('setting-port').value.trim(),
+        relayUrl: normalizeRelayUrl($('setting-relay').value),
+        remoteKey: $('setting-key').value.trim(),
+        remoteKeyMode: 'manual',
+      };
+      if ((settings.relayUrl && !settings.remoteKey) || (!settings.relayUrl && settings.remoteKey)) {
+        showToast('远控地址和远控密钥需要同时填写');
+        return;
+      }
+      const response = await authFetch('/codex/control-config', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      if (response.status === 404) throw new Error('后端更新后支持保存配置');
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.message || '保存配置失败');
+      state.config = data.config || {};
+      applyConfig(data.config || {}, data.effective || {});
+      showToast(data.message || '配置已保存');
+    }
+
+    document.querySelectorAll('[data-copy]').forEach(button => {
+      button.addEventListener('click', () => {
+        const data = state.status || {};
+        const kind = button.dataset.copy;
+        const map = {
+          relay: [$('setting-relay').value, 'Cloudflare 服务地址'],
+          key: [$('setting-key').value, '远控密钥'],
+          lan: [data.localUrl || '', '本地入口'],
+          remote: [data.remoteUrl || remoteUrlFromFields() || '', '远控入口'],
+        };
+        copyText(...map[kind]);
+      });
+    });
+    $('toggle-key').addEventListener('click', () => {
+      const input = $('setting-key');
+      const visible = input.type === 'text';
+      input.type = visible ? 'password' : 'text';
+      $('toggle-key').querySelector('use').setAttribute('href', visible ? '#icon-eye-off' : '#icon-eye');
+    });
+    ['setting-relay', 'setting-key'].forEach(id => {
+      $(id).addEventListener('input', updateRemotePreview);
+    });
+    document.querySelectorAll('.service-action').forEach(button => {
+      button.addEventListener('click', () => runServiceControl());
+    });
+    $('settings-open').addEventListener('click', openSettings);
+    $('settings-close').addEventListener('click', closeSettings);
+    document.querySelector('[data-close-settings]').addEventListener('click', closeSettings);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !$('settings-modal').hidden) closeSettings();
+    });
+    $('save-settings').addEventListener('click', () => {
+      saveSettings().catch(error => showToast(error.message));
+    });
+    Promise.all([loadStatus(), loadControlConfig()]).catch(error => {
+      document.body.dataset.service = 'error';
+      $('service-status').textContent = '异常';
+      updateServiceAction(false);
+      showToast(error.message || '读取服务状态失败');
+    });
+  </script>
+</body>
+</html>

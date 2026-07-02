@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-control-service"
+description = "Allows the CodexPanel desktop control panel to start, stop, or restart the local sidecar service."
+commands.allow = ["control_service"]

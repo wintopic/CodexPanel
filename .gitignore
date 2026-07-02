@@ -1,0 +1,39 @@
+logs/
+.DS_Store
+.build/
+dist/
+output/
+node_modules/
+.wrangler/
+tmp-*
+*.log
+
+# Local developer/runtime state.
+.cargo/
+.env
+.env.*
+!.env.example
+*.local
+state.json
+.codex/
+
+# Generated Tauri/sidecar build output.
+src-tauri/target/
+src-tauri/bin/codexpanel-node-sidecar-*
+src-tauri/gen/
+
+# Local Cloudflare deployment files. Commit the *.example templates instead.
+cloudflare/wrangler.toml
+cloudflare/pages/wrangler.toml
+
+# Release artifacts and legacy binary docs/screenshots should be generated or
+# attached to Releases instead of committed to the source tree.
+*.msi
+*.dmg
+*.pkg
+*.apk
+*.zip
+*.7z
+docs/*.pdf
+assets/screenshots/
+assets/install/
