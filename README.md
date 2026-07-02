@@ -67,27 +67,6 @@ Node sidecar 提供：
 
 本地 token 在运行时生成，不会被打包。远控密钥和 Cloudflare URL 是用户配置项，只会在 sidecar 启动时从本地状态或环境变量读取。
 
-## 不会被打包的内容
-
-构建脚本会拒绝打包用户状态或密钥：
-
-- `.env`
-- `.env.local`
-- `.env.production`
-- `state.json`
-- `.codex/`
-
-生成的二进制和本地部署文件也会被 git 忽略：
-
-- `build/bin/`
-- `build/tmp/`
-- `frontend/wailsjs/`
-- `.build/`
-- `cloudflare/wrangler.toml`
-- `cloudflare/pages/wrangler.toml`
-
-部署模板请提交 `*.example` 文件。真实密钥和本地 Cloudflare 账号配置必须留在仓库外。
-
 ## 环境要求
 
 桌面开发：
