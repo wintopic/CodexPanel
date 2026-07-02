@@ -3682,6 +3682,17 @@ function remoteUrlWithKey(baseUrl = '') {
   return `${url}/?token=${encodeURIComponent(REMOTE_ACCESS_KEY)}`;
 }
 
+function effectiveControlConfig(config = {}) {
+  const normalized = normalizeControlConfig(config);
+  return {
+    port: normalized.port || PORT,
+    relayUrl: normalized.relayUrl || RELAY_URL,
+    deviceId: normalized.deviceId || RELAY_DEVICE_ID,
+    remoteKeyMode: 'manual',
+    remoteKey: normalized.remoteKey || REMOTE_ACCESS_KEY,
+  };
+}
+
 function handleControlStatus(req, res) {
   if (!isAuthorized(req)) return json(res, 401, { ok: false, code: 'UNAUTHORIZED', message: '访问令牌不正确。' });
   const lanBases = getLanApiBases();
@@ -3741,13 +3752,7 @@ async function handleControlConfig(req, res) {
     return json(res, 200, {
       ok: true,
       config: publicControlConfig(state.controlConfig, { exposeSecrets: true }),
-      effective: {
-        port: PORT,
-        relayUrl: RELAY_URL,
-        deviceId: RELAY_DEVICE_ID,
-        remoteKeyMode: 'manual',
-        remoteKey: REMOTE_ACCESS_KEY,
-      },
+      effective: effectiveControlConfig(state.controlConfig),
     });
   }
 
@@ -3768,13 +3773,7 @@ async function handleControlConfig(req, res) {
   return json(res, 200, {
     ok: true,
     config: publicControlConfig(next, { exposeSecrets: true }),
-    effective: {
-      port: PORT,
-      relayUrl: RELAY_URL,
-      deviceId: RELAY_DEVICE_ID,
-      remoteKeyMode: 'manual',
-      remoteKey: REMOTE_ACCESS_KEY,
-    },
+    effective: effectiveControlConfig(next),
     message: '配置已保存。重启本地服务后生效。',
   });
 }
