@@ -3074,12 +3074,26 @@ async function pressPasteAndEnter() {
   await pressEnter();
 }
 
+async function pressPasteAndControlEnter() {
+  await pressPaste();
+  await delay(TEXT_PASTE_SETTLE_MS);
+  await pressControlEnter();
+}
+
 async function pressEnter() {
   if (IS_WINDOWS) {
     await windowsSendKeys('{ENTER}');
     return;
   }
   await runProcess('osascript', ['-e', 'tell application "System Events" to key code 36']);
+}
+
+async function pressControlEnter() {
+  if (IS_WINDOWS) {
+    await windowsSendKeys('^{ENTER}');
+    return;
+  }
+  await runProcess('osascript', ['-e', 'tell application "System Events" to key code 36 using control down']);
 }
 
 async function pressCodexShortcut(key, modifiers = []) {
@@ -3118,6 +3132,7 @@ async function pressCancelCodexResponse() {
 
 async function pasteAndEnter(text, target = 'frontmost', attachments = [], threadId = '', options = {}) {
   await focusTarget(target, threadId, options);
+  const submitMode = options.submitMode === 'guide' ? 'guide' : 'queue';
 
   for (const attachment of attachments) {
     await copyImageToClipboard(attachment);
@@ -3127,11 +3142,13 @@ async function pasteAndEnter(text, target = 'frontmost', attachments = [], threa
 
   if (text) {
     await copyTextToClipboard(text);
-    await pressPasteAndEnter();
+    if (submitMode === 'guide') await pressPasteAndControlEnter();
+    else await pressPasteAndEnter();
     return;
   }
 
-  await pressEnter();
+  if (submitMode === 'guide') await pressControlEnter();
+  else await pressEnter();
 }
 
 function modelSwitchTargetForCurrent(current = {}, requestedTarget = '') {
@@ -3488,6 +3505,7 @@ async function handleSend(req, res) {
   const assumeThreadSynced = payload.assumeThreadSynced === true;
   const expectNewThread = payload.expectNewThread === true && target === 'codex' && !selectedThreadId;
   const directPasteWithoutClick = payload.directPasteWithoutClick === true && expectNewThread;
+  const submitMode = payload.submitMode === 'guide' ? 'guide' : 'queue';
   const previousThreadId = isCodexThreadId(payload.previousThreadId) ? payload.previousThreadId : '';
   const expectedNewThreadCwd = validLocalDirectory(typeof payload.expectedCwd === 'string' ? payload.expectedCwd : '');
   const clientRequestId = normalizeClientRequestId(payload.clientRequestId);
@@ -3538,7 +3556,7 @@ async function handleSend(req, res) {
         watch,
       });
     }
-    await pasteAndEnter(text, target, attachments, selectedThreadId, { assumeThreadSynced, skipComposerClick: directPasteWithoutClick });
+    await pasteAndEnter(text, target, attachments, selectedThreadId, { assumeThreadSynced, skipComposerClick: directPasteWithoutClick, submitMode });
     if (expectNewThread && watch) {
       const newSessionFile = await waitForCodexSessionFileForNewSend({
         sinceMs: watchSinceMs,
@@ -3558,8 +3576,11 @@ async function handleSend(req, res) {
     }
     const result = {
       ok: true,
-      message: target === 'codex' ? '已切到 Codex，粘贴并按下回车。' : '已粘贴并按下回车。',
+      message: target === 'codex'
+        ? (submitMode === 'guide' ? '已切到 Codex，并作为引导发送。' : '已切到 Codex，并排队发送。')
+        : '已粘贴并按下回车。',
       target,
+      submitMode,
       sentAt: new Date().toISOString(),
       attachments: attachments.map(item => ({ name: item.name, size: item.size, type: item.mime })),
       watch,
