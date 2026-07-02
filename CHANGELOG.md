@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.0.14 - 2026-07-03
+
+- Removed the white outer-corner bleed on the Windows frameless window.
+- Switched the WebView back to an opaque, matching window background while keeping the custom title bar.
+
 ## v3.0.13 - 2026-07-03
 
 - Improved Windows frameless window corner rendering.
