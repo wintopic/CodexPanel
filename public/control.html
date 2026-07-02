@@ -576,7 +576,6 @@
     <symbol id="icon-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"></path><path d="m8 6-6 6 6 6"></path></symbol>
     <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></symbol>
     <symbol id="icon-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.08-7.08l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.08 7.08l1.71-1.71"></path></symbol>
-    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></symbol>
     <symbol id="icon-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"></path><path d="M3 21v-5h5"></path></symbol>
     <symbol id="icon-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></symbol>
     <symbol id="icon-check-circle" viewBox="0 0 24 24"><path d="M21.8 10A10 10 0 1 1 17 3.3"></path><path d="m9 11 3 3L22 4"></path></symbol>
@@ -696,7 +695,6 @@
         </div>
         <div class="update-actions">
           <button class="btn ghost" id="check-update" type="button"><svg aria-hidden="true"><use href="#icon-refresh-cw"></use></svg>检查</button>
-          <button class="btn ghost" id="download-update" type="button"><svg aria-hidden="true"><use href="#icon-download"></use></svg>下载</button>
           <button class="btn primary" id="install-update" type="button"><svg aria-hidden="true"><use href="#icon-refresh-cw"></use></svg>重启更新</button>
         </div>
       </section>
@@ -722,7 +720,8 @@
     const query = new URLSearchParams(location.search);
     let token = query.get('token') || localStorage.getItem('codex.controlToken') || '';
     if (token) localStorage.setItem('codex.controlToken', token);
-    const state = { status: null, checks: [], config: null, update: null };
+    const state = { status: null, checks: [], config: null, update: null, autoUpdateAsset: '' };
+    let configAutoSaveTimer = 0;
 
     function basePath() {
       const match = location.pathname.match(/^\/remote\/[^/]+/);
@@ -890,9 +889,27 @@
         const data = await updateInvoke('GetUpdateStatus');
         state.update = data || {};
         renderUpdateStatus(state.update);
+        maybeAutoDownloadUpdate(state.update);
       } catch {
         renderUpdateStatus({ message: '仅桌面客户端可用', canInstall: false });
       }
+    }
+    function maybeAutoDownloadUpdate(status = {}) {
+      if (!status.available || status.downloaded || status.downloading) return;
+      const assetKey = status.assetName || status.latestVersion || 'latest';
+      if (state.autoUpdateAsset === assetKey) return;
+      state.autoUpdateAsset = assetKey;
+      renderUpdateStatus({ ...status, downloading: true, message: '发现新版本，正在自动下载' });
+      updateInvoke('DownloadUpdate')
+        .then(data => {
+          state.update = data || {};
+          renderUpdateStatus(state.update);
+          showToast(state.update.message || '更新已下载');
+        })
+        .catch(error => {
+          state.autoUpdateAsset = '';
+          showToast(error.message || '自动下载更新失败');
+        });
     }
     function createIcon(symbolId) {
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -954,7 +971,6 @@
       const checking = Boolean(status.checking);
       const downloading = Boolean(status.downloading);
       $('check-update').disabled = checking || downloading;
-      $('download-update').disabled = checking || downloading || !status.available || status.downloaded;
       $('install-update').disabled = checking || downloading || !status.downloaded || !status.canInstall;
       if ((checking || downloading) && !$('settings-modal').hidden) {
         window.clearTimeout(renderUpdateStatus.timer);
@@ -1074,7 +1090,9 @@
         updateServiceAction(state.status?.status === 'running');
       }
     }
-    async function saveSettings() {
+    async function saveSettings(options = {}) {
+      const silent = Boolean(options.silent);
+      const skipIncomplete = Boolean(options.skipIncomplete);
       const settings = {
         port: $('setting-port').value.trim(),
         relayUrl: relayUrlValue($('setting-relay').value),
@@ -1083,7 +1101,7 @@
       };
       const relayConfigured = Boolean(settings.relayUrl.trim());
       if ((relayConfigured && !settings.remoteKey) || (!relayConfigured && settings.remoteKey)) {
-        showToast('远控地址和远控密钥需要同时填写');
+        if (!skipIncomplete && !silent) showToast('远控地址和远控密钥需要同时填写');
         return;
       }
       const response = await authFetch('/codex/control-config', {
@@ -1096,21 +1114,22 @@
       if (!response.ok || !data.ok) throw new Error(data.message || '保存配置失败');
       state.config = data.config || {};
       applyConfig(data.config || {}, data.effective || {});
-      showToast(data.message || '配置已保存');
+      if (!silent) showToast(data.message || '配置已保存');
+    }
+    function scheduleConfigAutoSave() {
+      updateRemotePreview();
+      window.clearTimeout(configAutoSaveTimer);
+      configAutoSaveTimer = window.setTimeout(() => {
+        saveSettings({ silent: true, skipIncomplete: true }).catch(error => console.warn('Auto save config failed:', error));
+      }, 700);
     }
     async function checkForUpdate() {
       renderUpdateStatus({ ...(state.update || {}), checking: true, message: '正在检查更新' });
       const data = await updateInvoke('CheckForUpdate');
       state.update = data || {};
       renderUpdateStatus(state.update);
+      maybeAutoDownloadUpdate(state.update);
       showToast(state.update.message || '检查完成');
-    }
-    async function downloadUpdate() {
-      renderUpdateStatus({ ...(state.update || {}), downloading: true, message: '正在下载更新' });
-      const data = await updateInvoke('DownloadUpdate');
-      state.update = data || {};
-      renderUpdateStatus(state.update);
-      showToast(state.update.message || '下载完成');
     }
     async function installUpdate() {
       const data = await updateInvoke('InstallUpdate');
@@ -1139,7 +1158,8 @@
       $('toggle-key').querySelector('use').setAttribute('href', visible ? '#icon-eye-off' : '#icon-eye');
     });
     ['setting-relay', 'setting-key'].forEach(id => {
-      $(id).addEventListener('input', updateRemotePreview);
+      $(id).addEventListener('input', scheduleConfigAutoSave);
+      $(id).addEventListener('blur', () => saveSettings({ silent: true, skipIncomplete: true }).catch(error => console.warn('Auto save config failed:', error)));
     });
     document.querySelectorAll('.service-action').forEach(button => {
       button.addEventListener('click', () => runServiceControl());
@@ -1155,9 +1175,6 @@
     });
     $('check-update').addEventListener('click', () => {
       checkForUpdate().catch(error => showToast(error.message));
-    });
-    $('download-update').addEventListener('click', () => {
-      downloadUpdate().catch(error => showToast(error.message));
     });
     $('install-update').addEventListener('click', () => {
       installUpdate().catch(error => showToast(error.message));

@@ -116,7 +116,17 @@ func (a *App) GetUpdateStatus() *UpdateStatus {
 }
 
 func (a *App) CheckForUpdate() (*UpdateStatus, error) {
-	return a.updater.Check(context.Background())
+	status, err := a.updater.Check(context.Background())
+	if err == nil && status != nil && status.Available && !status.Downloaded && !status.Downloading {
+		go a.updater.Download(context.Background())
+		next := a.updater.Status()
+		if !next.Downloading {
+			next.Downloading = true
+			next.Message = "发现新版本，正在自动下载"
+		}
+		return &next, nil
+	}
+	return status, err
 }
 
 func (a *App) DownloadUpdate() (*UpdateStatus, error) {

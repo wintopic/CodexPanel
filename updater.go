@@ -229,7 +229,21 @@ func (u *UpdateManager) InstallDownloaded() (*UpdateStatus, error) {
 	if !fileExists(path) {
 		return nil, userError("更新包不存在，请重新下载。")
 	}
-	cmd := exec.Command(path, "/SP-", "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/CLOSEAPPLICATIONS")
+	appPath, err := os.Executable()
+	if err != nil || appPath == "" {
+		return nil, userError("无法定位当前程序，不能自动重启更新。")
+	}
+	script := `
+$installer = $args[0]
+$app = $args[1]
+Start-Sleep -Milliseconds 800
+Start-Process -FilePath $installer -ArgumentList @('/SP-', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CLOSEAPPLICATIONS') -Wait
+Start-Sleep -Milliseconds 500
+if (Test-Path -LiteralPath $app) {
+  Start-Process -FilePath $app
+}
+`
+	cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script, path, appPath)
 	configureCommand(cmd)
 	if err := cmd.Start(); err != nil {
 		return nil, err
@@ -237,7 +251,7 @@ func (u *UpdateManager) InstallDownloaded() (*UpdateStatus, error) {
 
 	u.mu.Lock()
 	u.installStarted = true
-	u.status.Message = "更新安装已启动"
+	u.status.Message = "正在重启并安装更新"
 	status := u.status
 	u.mu.Unlock()
 	return &status, nil
