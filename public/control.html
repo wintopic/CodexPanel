@@ -26,6 +26,7 @@
       --green: #31c77a;
       --teal: #0f9f93;
       --window-bg: linear-gradient(180deg, #f8fbff, #eff5fc);
+      --window-radius: 8px;
       --shadow: 0 1px 2px rgba(70, 91, 126, .08);
       --soft-shadow: 0 1px 2px rgba(70, 91, 126, .07);
       --icon-stroke: 2.15;
@@ -33,7 +34,15 @@
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Text", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; width: 100%; height: 100%; background: #eff5fc; color: var(--ink); }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: var(--window-radius);
+      background: #eff5fc;
+      color: var(--ink);
+      overflow: hidden;
+    }
     body {
       height: 100vh;
       padding: 0;
@@ -56,7 +65,7 @@
       grid-template-rows: auto auto minmax(0, 1fr);
       row-gap: 9px;
       border: 1px solid rgba(42, 58, 88, .16);
-      border-radius: 14px;
+      border-radius: var(--window-radius);
       background: var(--window-bg);
       box-shadow: 0 10px 30px rgba(28, 43, 72, .13);
       backdrop-filter: blur(14px);

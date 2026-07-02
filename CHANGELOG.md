@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.0.15 - 2026-07-03
+
+- Matched the page-level corner radius to the Windows native frameless window radius.
+- Applied the same clipping radius to `html`, `body`, and the outer shell.
+
 ## v3.0.14 - 2026-07-03
 
 - Removed the white outer-corner bleed on the Windows frameless window.
