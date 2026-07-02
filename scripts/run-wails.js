@@ -10,6 +10,7 @@ const projectDir = path.resolve(__dirname, '..');
 const rawArgs = process.argv.slice(2);
 const command = rawArgs[0] || 'build';
 const args = rawArgs.length ? [...rawArgs] : ['build', '-clean'];
+const packageJson = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json'), 'utf8'));
 
 function exists(file) {
   try {
@@ -66,6 +67,10 @@ function extraToolPaths(wailsPath) {
 
 if (process.platform === 'linux' && (command === 'build' || command === 'dev') && !args.includes('-tags')) {
   args.push('-tags', 'webkit2_41');
+}
+
+if ((command === 'build' || command === 'dev') && !args.includes('-ldflags')) {
+  args.push('-ldflags', `-X main.appVersion=${packageJson.version}`);
 }
 
 const wails = findWails();

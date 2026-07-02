@@ -17,7 +17,7 @@
   },
   "private": true,
   "name": "codexpanel",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "CodexPanel local phone-to-Codex Desktop bridge",
   "license": "SEE LICENSE IN LICENSE"
 }

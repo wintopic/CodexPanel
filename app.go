@@ -10,11 +10,12 @@ import (
 )
 
 type App struct {
-	ctx   context.Context
-	mu    sync.Mutex
-	cmd   *SidecarProcess
-	port  int
-	token string
+	ctx     context.Context
+	mu      sync.Mutex
+	cmd     *SidecarProcess
+	port    int
+	token   string
+	updater *UpdateManager
 }
 
 const sidecarHealthTimeout = 30 * time.Second
@@ -43,8 +44,9 @@ func NewApp() *App {
 	}
 
 	return &App{
-		port:  port,
-		token: token,
+		port:    port,
+		token:   token,
+		updater: NewUpdateManager(appVersion),
 	}
 }
 
@@ -57,10 +59,12 @@ func (a *App) startup(ctx context.Context) {
 	if err := a.startService(); err != nil {
 		logLine("Start local service failed:", err.Error())
 	}
+	go a.updater.CheckAndDownload(context.Background())
 }
 
 func (a *App) shutdown(ctx context.Context) {
 	a.stopService()
+	a.updater.InstallOnExit()
 }
 
 func (a *App) GetControlToken() string {
@@ -104,6 +108,33 @@ func (a *App) ControlService(action string) (*ServiceControlResponse, error) {
 		message = "本地服务已启动。"
 	}
 	return a.serviceResponse(action, port, healthy, message), nil
+}
+
+func (a *App) GetUpdateStatus() *UpdateStatus {
+	status := a.updater.Status()
+	return &status
+}
+
+func (a *App) CheckForUpdate() (*UpdateStatus, error) {
+	return a.updater.Check(context.Background())
+}
+
+func (a *App) DownloadUpdate() (*UpdateStatus, error) {
+	return a.updater.Download(context.Background())
+}
+
+func (a *App) InstallUpdate() (*UpdateStatus, error) {
+	status, err := a.updater.InstallDownloaded()
+	if err != nil {
+		return status, err
+	}
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		if a.ctx != nil {
+			wailsruntime.Quit(a.ctx)
+		}
+	}()
+	return status, nil
 }
 
 func (a *App) serviceResponse(action string, port int, ok bool, message string) *ServiceControlResponse {
