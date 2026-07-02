@@ -1,30 +1,29 @@
 # CodexPanel
 
-CodexPanel is a local desktop control panel for controlling the Codex Desktop
-app from another device. The desktop app manages a local Node sidecar service,
-shows the local/remote entry points, and keeps secrets out of release bundles.
-The remote control surface is still opened from a phone or another browser.
+中文 | [English](README.en.md)
 
-This repository contains the open local-control implementation:
+CodexPanel 是一个本地桌面控制面板，用于从手机或另一台设备控制当前电脑上的 Codex Desktop。桌面客户端负责管理本地 Node sidecar 服务、展示本地/远控入口，并确保密钥不会被打进发布包。远控界面仍然通过手机或浏览器打开。
 
-- Wails desktop shell for Windows, Linux, and macOS.
-- Go process manager for the Node sidecar.
-- Node local service for Codex Desktop automation and browser APIs.
-- Reused Web frontend for the local panel and remote mobile control page.
-- WAN relay deployment maintained in the separate `CodexPanel-WAN` repository.
-- GitHub Actions desktop release builds.
+本仓库包含本地控制面板的开源实现：
 
-## Current Status
+- 面向 Windows、Linux、macOS 的 Wails 桌面壳。
+- 负责 Node sidecar 生命周期的 Go 进程管理器。
+- 面向 Codex Desktop 自动化和浏览器 API 的 Node 本地服务。
+- 本地控制面板和远端移动控制页复用的 Web 前端。
+- 广域网中转部署由独立仓库 `CodexPanel-WAN` 维护。
+- GitHub Actions 自动构建桌面发布包。
 
-- Project name: `CodexPanel`
-- Desktop package: Wails portable bundle plus Windows installer
-- Windows installer: `CodexPanel-Setup-<version>.exe`
-- Windows portable output: `CodexPanel.exe` plus `codexpanel-node-sidecar.exe`
-- Local panel: desktop WebView, no browser jump required
-- Remote control: browser/mobile page through LAN or Cloudflare relay
-- Local service controls: start and stop are handled by the desktop client
+## 当前状态
 
-## Architecture
+- 项目名称：`CodexPanel`
+- 桌面包形态：Wails 便携包 + Windows 安装包
+- Windows 安装包：`CodexPanel-Setup-<version>.exe`
+- Windows 便携包：`CodexPanel.exe` + `codexpanel-node-sidecar.exe`
+- 本地面板：桌面 WebView，不需要跳转浏览器操作
+- 远程控制：通过局域网或 Cloudflare 中转在浏览器/手机端打开
+- 本地服务控制：启动和停止由桌面客户端执行
+
+## 架构
 
 ```mermaid
 flowchart LR
@@ -43,40 +42,34 @@ flowchart LR
   Relay --> Sidecar
 ```
 
-The desktop window serves `public/control.html` through the Wails asset server.
-Go owns the sidecar process and proxies `/codex/*` requests to the local Node
-service, so desktop buttons can start and stop the service without asking the
-user to open a terminal.
+桌面窗口通过 Wails asset server 承载 `public/control.html`。Go 负责 sidecar 进程，并把 `/codex/*` 请求反代到本地 Node 服务，因此桌面按钮可以直接启动和停止服务，不需要用户打开终端。
 
-The Node sidecar serves:
+Node sidecar 提供：
 
-- `public/control.html` for the desktop control panel.
-- `public/index.html` for the remote/mobile control page.
-- `/codex/control-status` for service status.
-- `/codex/control-config` for local panel configuration.
-- `/codex/service-check` for diagnostics.
-- Codex thread, send, stop, file, and automation endpoints used by the remote UI.
+- `public/control.html`：桌面控制面板。
+- `public/index.html`：远端/移动控制页面。
+- `/codex/control-status`：服务状态。
+- `/codex/control-config`：本地面板配置。
+- `/codex/service-check`：服务诊断。
+- 远控页面需要的 Codex 线程、发送、停止、文件和自动化接口。
 
-## How It Works
+## 工作原理
 
-1. `CodexPanel.exe` starts.
-2. Go reads the saved local panel config from `~/.codex/state.json`.
-3. Go generates a local control token for the WebView session.
-4. Go starts `codexpanel-node-sidecar` with runtime environment variables.
-5. The sidecar runs the local HTTP service on the configured port.
-6. The desktop WebView opens the embedded control panel and receives the token
-   through Wails bindings.
-7. The panel displays status, local entry, remote entry, PID, device ID, and uptime.
-8. The phone opens the LAN URL or the Cloudflare WAN URL in a browser.
-9. The sidecar talks to Codex Desktop in the current logged-in desktop session.
+1. `CodexPanel.exe` 启动。
+2. Go 从 `~/.codex/state.json` 读取已保存的本地面板配置。
+3. Go 为当前 WebView 会话生成本地控制 token。
+4. Go 使用运行时环境变量启动 `codexpanel-node-sidecar`。
+5. sidecar 在配置的端口上启动本地 HTTP 服务。
+6. 桌面 WebView 打开内置控制面板，并通过 Wails 绑定获得 token。
+7. 面板显示服务状态、本地入口、远控入口、PID、设备 ID 和运行时间。
+8. 手机打开局域网 URL 或 Cloudflare 广域网 URL。
+9. sidecar 在当前登录桌面会话中和 Codex Desktop 通信。
 
-The local token is generated at runtime and is not packaged. The remote key and
-Cloudflare URL are user configuration values and are read from local state or
-environment variables when the sidecar starts.
+本地 token 在运行时生成，不会被打包。远控密钥和 Cloudflare URL 是用户配置项，只会在 sidecar 启动时从本地状态或环境变量读取。
 
-## What Is Not Packaged
+## 不会被打包的内容
 
-The build scripts deliberately refuse to bundle user state or secrets:
+构建脚本会拒绝打包用户状态或密钥：
 
 - `.env`
 - `.env.local`
@@ -84,7 +77,7 @@ The build scripts deliberately refuse to bundle user state or secrets:
 - `state.json`
 - `.codex/`
 
-Generated binaries and local deployment files are also ignored by git:
+生成的二进制和本地部署文件也会被 git 忽略：
 
 - `build/bin/`
 - `build/tmp/`
@@ -93,208 +86,192 @@ Generated binaries and local deployment files are also ignored by git:
 - `cloudflare/wrangler.toml`
 - `cloudflare/pages/wrangler.toml`
 
-Commit `*.example` files for deployment templates. Keep real keys and local
-Cloudflare account configuration outside the repository.
+部署模板请提交 `*.example` 文件。真实密钥和本地 Cloudflare 账号配置必须留在仓库外。
 
-## Requirements
+## 环境要求
 
-Desktop development:
+桌面开发：
 
 - Node.js 18+
 - Go 1.23+
 - Wails CLI v2.12+
-- Windows: Microsoft Edge WebView2 Runtime
-- Windows installer builds: Inno Setup 6
-- Linux: GTK/WebKitGTK development packages
-- macOS: Xcode command line tools
+- Windows：Microsoft Edge WebView2 Runtime
+- Windows 安装包构建：Inno Setup 6
+- Linux：GTK/WebKitGTK 开发包
+- macOS：Xcode command line tools
 
-Ubuntu development support is documented in [docs/UBUNTU_DEVELOPMENT.md](docs/UBUNTU_DEVELOPMENT.md).
+Ubuntu 开发支持见 [docs/UBUNTU_DEVELOPMENT.md](docs/UBUNTU_DEVELOPMENT.md)。
 
-## Local Development
+## 本地开发
 
-Install dependencies:
+安装依赖：
 
 ```powershell
 npm ci
 ```
 
-Run syntax checks:
+运行语法检查：
 
 ```powershell
 npm run check
 node --check windows/node-sidecar.js
 ```
 
-Run the Wails desktop app in development mode:
+以开发模式运行 Wails 桌面应用：
 
 ```powershell
 npm run wails:dev
 ```
 
-Build the desktop app:
+构建桌面应用：
 
 ```powershell
 npm run wails:build
 npm run wails:sidecar
 ```
 
-The portable desktop bundle is written to:
+便携桌面包输出到：
 
 ```text
 build/bin/
 ```
 
-Build the Windows installer:
+构建 Windows 安装包：
 
 ```powershell
 npm run installer:win
 ```
 
-The installer is written to:
+安装包输出到：
 
 ```text
 dist/CodexPanel-Setup-<version>.exe
 ```
 
-The portable Windows bundle contains two executables by design:
+Windows 便携包里有两个可执行文件，这是设计如此：
 
-- `CodexPanel.exe`: the desktop control panel users launch.
-- `codexpanel-node-sidecar.exe`: the bundled local service started and stopped
-  by `CodexPanel.exe`; users do not run it manually.
+- `CodexPanel.exe`：用户启动的桌面控制面板。
+- `codexpanel-node-sidecar.exe`：由 `CodexPanel.exe` 启动和停止的本地服务，用户不需要手动运行。
 
-For ordinary Windows users, publish the installer. Keep the portable zip for
-development, diagnostics, and no-install usage.
+普通 Windows 用户建议发布安装包。便携 zip 保留给开发、诊断和免安装场景。
 
-## Service Controls
+## 服务控制
 
-The desktop panel uses the Wails method `App.ControlService`.
+桌面面板通过 Wails 方法 `App.ControlService` 控制服务。
 
-Supported actions:
+支持的操作：
 
-- `start`: starts the local sidecar if it is not healthy.
-- `stop`: stops the sidecar and, on Windows, kills the full sidecar process tree.
+- `start`：本地 sidecar 不健康或未运行时启动服务。
+- `stop`：停止 sidecar；在 Windows 上会结束完整 sidecar 进程树。
 
-The frontend keeps one primary service button:
+前端保留一个主服务按钮：
 
-- Running: button shows `停止`.
-- Stopped: button shows `启动`.
+- 运行中：按钮显示 `停止`。
+- 已停止：按钮显示 `启动`。
 
-Stopping the service immediately updates the panel state and releases the local
-HTTP port.
+停止服务后，面板会立即更新状态并释放本地 HTTP 端口。
 
-## Configuration
+## 配置
 
-The local panel stores user configuration in Codex state:
+本地面板把用户配置保存在 Codex 状态文件中：
 
 ```text
 ~/.codex/state.json
 ```
 
-Main fields:
+主要字段：
 
-- `port`: local service port, default `8787`.
-- `relayUrl`: Cloudflare service URL, entered by the user.
-- `remoteKey`: remote control key, entered by the user.
-- `deviceId`: local device ID, defaulting to the Windows user name.
+- `port`：本地服务端口，默认 `8787`。
+- `relayUrl`：用户输入的 Cloudflare 服务地址。
+- `remoteKey`：用户输入的远控密钥。
+- `deviceId`：本地设备 ID，默认使用 Windows 用户名。
 
-Do not hard-code these values into source or release bundles.
+不要把这些值硬编码进源码或发布包。
 
-## WAN / Cloudflare Relay
+## 广域网 / Cloudflare 中转
 
-LAN use does not require Cloudflare. For WAN access across different networks,
-deploy the relay from the dedicated repository:
+局域网使用不需要 Cloudflare。跨网络广域网访问时，请从独立仓库部署中转服务：
 
 - [wintopic/CodexPanel-WAN](https://github.com/wintopic/CodexPanel-WAN)
 
-Recommended setup flow:
+推荐配置流程：
 
-1. Deploy `CodexPanel-WAN` to Cloudflare Pages + Durable Object Worker by
-   following that repository's README.
-2. After deployment, record the Cloudflare service root URL, for example
-   `https://codexpanel-wan.pages.dev` or your custom domain.
-3. Open CodexPanel desktop settings and fill in:
-   - Cloudflare service URL: the root URL only, without `/remote/...`.
-   - Remote key: a strong key chosen by the user.
-4. Keep the desktop Device ID consistent with the device ID allowed in
-   `CodexPanel-WAN` when `DEVICE_IDS` is configured.
-5. Start the local service. The remote entry becomes:
-   `https://<cloudflare-domain>/remote/<deviceId>/?token=<remote-key>`.
+1. 按照 `CodexPanel-WAN` 仓库 README，把中转服务部署到 Cloudflare Pages + Durable Object Worker。
+2. 部署完成后记录 Cloudflare 服务根地址，例如 `https://codexpanel-wan.pages.dev` 或你的自定义域名。
+3. 打开 CodexPanel 桌面设置并填写：
+   - Cloudflare 服务地址：只填根地址，不要带 `/remote/...`。
+   - 远控密钥：用户自行设置的强密钥。
+4. 如果 `CodexPanel-WAN` 配置了 `DEVICE_IDS`，请保持桌面端设备 ID 与允许列表一致。
+5. 启动本地服务。远控入口会变为：
+   `https://<cloudflare-domain>/remote/<deviceId>/?token=<remote-key>`。
 
-The computer is the controlled side and does not need an extra Cloudflare agent
-secret. The WAN relay only queues and forwards requests; CodexPanel on the local
-computer still validates the remote key and performs the actual Codex Desktop
-automation.
+电脑端是被控端，不需要额外的 Cloudflare Agent 密钥。WAN 中转只负责排队和转发请求；CodexPanel 仍然在本机校验远控密钥，并执行真正的 Codex Desktop 自动化。
 
-Legacy relay examples remain in this repository for reference:
+本仓库仍保留一些历史中转示例供参考：
 
 - [cloudflare/wrangler.toml.example](cloudflare/wrangler.toml.example)
 - [cloudflare/pages/wrangler.toml.example](cloudflare/pages/wrangler.toml.example)
 - [docs/cloudflare-relay.md](docs/cloudflare-relay.md)
 
-Use `CodexPanel-WAN` as the source of truth for new WAN deployments.
+新的广域网部署请以 `CodexPanel-WAN` 为准。
 
 ## GitHub Actions
 
-Desktop release packaging is automated in:
+桌面发布包由以下 workflow 自动构建：
 
 ```text
 .github/workflows/windows-release.yml
 ```
 
-The workflow runs on every push to `main` and uploads desktop artifacts.
-Windows publishes both an installer `.exe` and a portable `.zip`; Linux and
-macOS are packaged as `.tar.gz` so executable permissions survive extraction.
-It can also be run manually from the Actions tab.
+workflow 会在每次推送到 `main` 时运行并上传桌面产物。Windows 会同时发布安装包 `.exe` 和便携 `.zip`；Linux 与 macOS 会发布 `.tar.gz`，以保留可执行权限。也可以在 Actions 页面手动触发。
 
-When pushing a tag like `v3.0.5`, the workflow uploads the desktop bundles to a
-GitHub Release automatically.
+推送类似 `v3.0.5` 的 tag 时，workflow 会自动把桌面包上传到 GitHub Release。
 
-## Repository Layout
+## 仓库结构
 
 ```text
-main.go                    Wails app entrypoint
-app.go                     Go sidecar lifecycle and Wails bindings
-assets.go                  Embedded control panel and /codex proxy
-process_*.go              Cross-platform process-tree handling
+main.go                    Wails 应用入口
+app.go                     Go sidecar 生命周期和 Wails 绑定
+assets.go                  内置控制面板和 /codex 反代
+process_*.go              跨平台进程树处理
 
 public/
-  control.html              Desktop control panel
-  index.html                Remote/mobile control page
-  icons/                    App icons
+  control.html              桌面控制面板
+  index.html                远端/移动控制页
+  icons/                    应用图标
 
-server.js                   Local Node service
-windows/node-sidecar.js     Sidecar entrypoint
+server.js                   本地 Node 服务
+windows/node-sidecar.js     sidecar 入口
 
 build/
-  appicon.png               Wails app icon source
-  windows/                  Windows Wails metadata, icon, installer script
+  appicon.png               Wails 应用图标源文件
+  windows/                  Windows Wails 元数据、图标、安装包脚本
 
 scripts/
-  build-wails-sidecar.js    Packages the Node sidecar
-  build-windows-installer.ps1 Builds the Windows installer
-  setup-ubuntu-dev.sh       Ubuntu development bootstrap
+  build-wails-sidecar.js    打包 Node sidecar
+  build-windows-installer.ps1 构建 Windows 安装包
+  setup-ubuntu-dev.sh       Ubuntu 开发环境初始化
 
 cloudflare/
-  relay-worker.mjs          Optional Durable Object relay
-  pages/_worker.js          Optional Pages worker
+  relay-worker.mjs          可选 Durable Object 中转
+  pages/_worker.js          可选 Pages worker
 ```
 
-## Release Checklist
+## 发布检查清单
 
-Before publishing a desktop build:
+发布桌面版本前：
 
-1. Run `npm run check`.
-2. Run `node --check windows/node-sidecar.js`.
-3. Run `go test ./...`.
-4. Run `npm run wails:build`.
-5. Run `npm run wails:sidecar`.
-6. On Windows, run `npm run installer:win`.
-7. Verify the desktop panel shows the correct icon and project name.
-8. Verify service diagnostics are `8/8`.
-9. Verify `启动` and `停止` both work.
-10. Verify no user keys or local state are present in the portable bundle or installer.
+1. 运行 `npm run check`。
+2. 运行 `node --check windows/node-sidecar.js`。
+3. 运行 `go test ./...`。
+4. 运行 `npm run wails:build`。
+5. 运行 `npm run wails:sidecar`。
+6. 在 Windows 上运行 `npm run installer:win`。
+7. 确认桌面面板显示正确图标和项目名。
+8. 确认服务诊断为 `8/8`。
+9. 确认 `启动` 和 `停止` 都可用。
+10. 确认便携包和安装包里没有用户密钥或本地状态。
 
-## License
+## 许可证
 
-CodexPanel is source-available for non-commercial use unless a separate written
-commercial license is granted by the copyright holder. See [LICENSE](LICENSE).
+除非版权持有人另行授予书面商业许可，CodexPanel 源码仅开放给非商业用途。详见 [LICENSE](LICENSE)。
