@@ -16,6 +16,10 @@ This repository contains the open local-control implementation:
 - WAN relay deployment maintained in the separate `CodexPanel-WAN` repository.
 - GitHub Actions desktop release builds.
 
+## Discussion
+
+- Discussion address: [linux.do](https://linux.do)
+
 ## Current Status
 
 - Project name: `CodexPanel`

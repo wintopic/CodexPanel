@@ -13,6 +13,10 @@ CodexPanel 是一个本地桌面控制面板，用于从手机或另一台设备
 - 广域网中转部署由独立仓库 `CodexPanel-WAN` 维护。
 - GitHub Actions 自动构建桌面发布包。
 
+## 讨论交流
+
+- 讨论地址：[linux.do](https://linux.do)
+
 ## 当前状态
 
 - 项目名称：`CodexPanel`
