@@ -2,18 +2,14 @@
   "scripts": {
     "start": "node server.js",
     "check": "node --check server.js",
-    "build:win": "npm run tauri:build",
-    "build:linux": "npm run tauri:build:linux",
+    "build:win": "npm run wails:build",
+    "build:linux": "npm run wails:build",
+    "build:desktop": "npm run wails:build",
     "setup:ubuntu": "bash scripts/setup-ubuntu-dev.sh",
-    "tauri:sidecar": "node scripts/build-tauri-sidecar.js",
-    "tauri:sidecar:linux": "bash scripts/build-tauri-sidecar-linux.sh",
-    "tauri:dev": "node scripts/run-tauri.js dev",
-    "tauri:build": "node scripts/run-tauri.js build",
-    "tauri:dev:linux": "bash scripts/run-tauri-linux.sh dev",
-    "tauri:build:linux": "bash scripts/run-tauri-linux.sh build"
-  },
-  "devDependencies": {
-    "@tauri-apps/cli": "^2.11.4"
+    "wails:dev": "wails dev",
+    "wails:build": "wails build -clean",
+    "wails:doctor": "wails doctor",
+    "wails:sidecar": "node scripts/build-wails-sidecar.js"
   },
   "engines": {
     "node": ">=18"

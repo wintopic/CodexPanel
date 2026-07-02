@@ -653,7 +653,7 @@
   <script>
     const $ = id => document.getElementById(id);
     const query = new URLSearchParams(location.search);
-    const token = query.get('token') || localStorage.getItem('codex.controlToken') || '';
+    let token = query.get('token') || localStorage.getItem('codex.controlToken') || '';
     if (token) localStorage.setItem('codex.controlToken', token);
     const state = { status: null, checks: [], config: null };
 
@@ -688,10 +688,24 @@
     function sleep(ms) {
       return new Promise(resolve => window.setTimeout(resolve, ms));
     }
+    async function ensureDesktopToken() {
+      if (token) return token;
+      const getControlToken = window.go?.main?.App?.GetControlToken;
+      if (getControlToken) {
+        const desktopToken = await getControlToken();
+        if (desktopToken) {
+          token = desktopToken;
+          localStorage.setItem('codex.controlToken', token);
+        }
+      }
+      return token;
+    }
     function desktopInvoke(command, payload = {}) {
-      const invoke = window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
-      if (!invoke) throw new Error('当前页面没有桌面客户端权限，请从 CodexPanel 桌面窗口操作。');
-      return invoke(command, payload);
+      const wailsControlService = window.go?.main?.App?.ControlService;
+      if (command === 'control_service' && wailsControlService) {
+        return wailsControlService(payload.action || '');
+      }
+      throw new Error('当前页面没有桌面客户端权限，请从 CodexPanel 桌面窗口操作。');
     }
     function formatUptime(seconds = 0) {
       const hour = Math.floor(seconds / 3600);
@@ -1011,7 +1025,7 @@
     $('save-settings').addEventListener('click', () => {
       saveSettings().catch(error => showToast(error.message));
     });
-    Promise.all([loadStatus(), loadControlConfig()]).catch(error => {
+    ensureDesktopToken().then(() => Promise.all([loadStatus(), loadControlConfig()])).catch(error => {
       document.body.dataset.service = 'error';
       $('service-status').textContent = '异常';
       updateServiceAction(false);

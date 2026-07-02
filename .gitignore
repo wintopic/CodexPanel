@@ -9,7 +9,6 @@ tmp-*
 *.log
 
 # Local developer/runtime state.
-.cargo/
 .env
 .env.*
 !.env.example
@@ -17,10 +16,10 @@ tmp-*
 state.json
 .codex/
 
-# Generated Tauri/sidecar build output.
-src-tauri/target/
-src-tauri/bin/codexpanel-node-sidecar-*
-src-tauri/gen/
+# Generated Wails build output.
+build/bin/
+build/tmp/
+frontend/wailsjs/
 
 # Local Cloudflare deployment files. Commit the *.example templates instead.
 cloudflare/wrangler.toml
@@ -33,6 +32,7 @@ cloudflare/pages/wrangler.toml
 *.pkg
 *.apk
 *.zip
+*.tar.gz
 *.7z
 docs/*.pdf
 assets/screenshots/

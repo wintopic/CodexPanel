@@ -1,0 +1,10 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "CodexPanel",
+  "outputfilename": "CodexPanel",
+  "frontend:build": "npm run check",
+  "author": {
+    "name": "wintopic",
+    "email": "97203022+wintopic@users.noreply.github.com"
+  }
+}

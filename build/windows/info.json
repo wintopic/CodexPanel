@@ -1,0 +1,15 @@
+{
+  "fixed": {
+    "file_version": "{{.Info.ProductVersion}}"
+  },
+  "info": {
+    "0000": {
+      "ProductVersion": "{{.Info.ProductVersion}}",
+      "CompanyName": "wintopic",
+      "FileDescription": "CodexPanel",
+      "LegalCopyright": "Copyright (c) 2026",
+      "ProductName": "CodexPanel",
+      "Comments": "Local desktop control panel for Codex Desktop"
+    }
+  }
+}

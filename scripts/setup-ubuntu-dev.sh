@@ -47,12 +47,6 @@ PACKAGES=(
 
 $SUDO apt-get install "${APT_YES[@]}" "${PACKAGES[@]}"
 
-if ! command -v rustup >/dev/null 2>&1; then
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  # shellcheck source=/dev/null
-  source "$HOME/.cargo/env"
-fi
-
 if ! command -v node >/dev/null 2>&1; then
   echo "Node.js 18+ is required. Install it with your preferred Node manager, then rerun npm install." >&2
   exit 1
@@ -64,9 +58,20 @@ if [[ "$NODE_MAJOR" -lt 18 ]]; then
   exit 1
 fi
 
+if ! command -v go >/dev/null 2>&1; then
+  echo "Go 1.23+ is required. Install Go, then rerun this script." >&2
+  exit 1
+fi
+
+if ! command -v wails >/dev/null 2>&1; then
+  go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
+  export PATH="$HOME/go/bin:$PATH"
+fi
+
 npm install
 npm run check
+go test ./...
 
 echo "Ubuntu development dependencies are ready."
-echo "Run development: npm run tauri:dev:linux"
-echo "Build Linux bundles: npm run tauri:build:linux"
+echo "Run development: npm run wails:dev"
+echo "Build Linux bundle: npm run wails:build && npm run wails:sidecar"
