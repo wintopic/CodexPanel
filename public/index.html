@@ -1618,7 +1618,8 @@
     }
     .icon-btn:active, .send-btn:active { transform: scale(.96); }
     .composer-action-hidden { display: none; }
-    .stop-btn:disabled { opacity: .45; cursor: wait; }
+    .stop-btn:disabled,
+    .guide-btn:disabled { opacity: .45; cursor: wait; }
     .stop-square {
       width: 18px;
       height: 18px;
@@ -3538,14 +3539,17 @@
     }
 
     .composer-submit-slot {
-      display: inline-grid;
-      place-items: center;
-      width: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      width: auto;
+      min-width: 36px;
       height: 36px;
     }
 
     .composer-submit-slot .send-btn {
-      grid-area: 1 / 1;
+      flex: 0 0 36px;
     }
 
     .model-menu-heading {
@@ -3934,6 +3938,31 @@
       align-self: center;
     }
 
+    .guide-btn {
+      border: 1px solid rgba(255,214,138,.24);
+      background: rgba(255,214,138,.10);
+      color: #ffd68a;
+    }
+
+    .guide-btn:hover,
+    .guide-btn:active {
+      background: rgba(255,214,138,.16);
+    }
+
+    html.theme-light-preload body .guide-btn,
+    body.theme-light .guide-btn {
+      border-color: rgba(112,74,0,.18);
+      background: rgba(112,74,0,.08);
+      color: #7a4e00;
+    }
+
+    html.theme-light-preload body .guide-btn:hover,
+    html.theme-light-preload body .guide-btn:active,
+    body.theme-light .guide-btn:hover,
+    body.theme-light .guide-btn:active {
+      background: rgba(112,74,0,.13);
+    }
+
     @media (max-width: 700px) {
       .composer {
         grid-template-columns: auto minmax(0, 1fr) auto auto;
@@ -4050,6 +4079,7 @@
         </div>
         <div class="composer-submit-slot">
           <button class="send-btn stop-btn composer-action-hidden" id="stop" type="button" title="停止生成" aria-label="停止生成" hidden><span class="stop-square" aria-hidden="true"><svg class="lucide-icon" data-icon="square-fill" viewBox="0 0 24 24" aria-hidden="true"><rect class="stop-square-fill" width="12" height="12" x="6" y="6" rx="2"></rect></svg></span></button>
+          <button class="send-btn guide-btn composer-action-hidden" id="guide-send" type="button" title="作为引导发送（Ctrl+Enter）" aria-label="作为引导发送" hidden><svg class="lucide-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0l1.58 6.14a2 2 0 0 0 1.44 1.44l6.14 1.58a.5.5 0 0 1 0 .96l-6.14 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path><path d="M20 3v4"></path><path d="M22 5h-4"></path></svg></button>
           <button class="send-btn" id="send" type="submit" title="发送" aria-label="发送"><svg class="lucide-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"></path><path d="m5 12 7-7 7 7"></path></svg></button>
         </div>
       </form>
@@ -4072,6 +4102,7 @@
     const composerSignature = document.querySelector('.composer-signature');
     const textarea = document.getElementById('text');
     const sendButton = document.getElementById('send');
+    const guideButton = document.getElementById('guide-send');
     const stopButton = document.getElementById('stop');
     const attachButton = document.getElementById('attach');
     const addMenuCard = document.getElementById('add-menu-card');
@@ -4194,6 +4225,7 @@
     let keyboardMonitorTimer = null;
     let keyboardAlignmentTimers = [];
     let keyboardPinTimers = [];
+    let keyboardRestoreBottomTimers = [];
     let keyboardAlignRaf = 0;
     let keyboardFocusStartedAt = 0;
     let keyboardShiftTarget = 0;
@@ -5711,6 +5743,23 @@
       if (document.body && document.body.scrollTop) document.body.scrollTop = 0;
     }
 
+    function clearKeyboardRestoreBottomTimers() {
+      keyboardRestoreBottomTimers.forEach(timer => window.clearTimeout(timer));
+      keyboardRestoreBottomTimers = [];
+    }
+
+    function settleThreadAtBottomAfterKeyboard() {
+      keepLayoutViewportPinned();
+      thread.scrollTop = thread.scrollHeight;
+      positionComposerSignature();
+    }
+
+    function scheduleKeyboardRestoreBottom() {
+      clearKeyboardRestoreBottomTimers();
+      requestAnimationFrame(settleThreadAtBottomAfterKeyboard);
+      keyboardRestoreBottomTimers = [40, 90, 160, 280, 450, 700, 1000].map(delay => window.setTimeout(settleThreadAtBottomAfterKeyboard, delay));
+    }
+
     function stableViewportHeight() {
       const viewportHeight = Math.round((window.visualViewport && window.visualViewport.height) || 0);
       return Math.round(Math.max(maxViewportHeight, window.innerHeight || 0, document.documentElement.clientHeight || 0, viewportHeight || 0));
@@ -5780,6 +5829,7 @@
       const viewportHeight = Math.round((viewport && viewport.height) || window.innerHeight || document.documentElement.clientHeight || 0);
       const baselineHeight = Math.round(Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0, viewportHeight || 0));
       const focused = document.activeElement === textarea;
+      const wasKeyboardOpen = document.body.classList.contains('keyboard-open');
       if (!focused && !document.body.classList.contains('keyboard-open')) {
         maxViewportHeight = baselineHeight;
       } else if (!document.body.classList.contains('keyboard-open')) {
@@ -5796,6 +5846,7 @@
         keyboardShiftTarget = 0;
         document.documentElement.style.setProperty('--keyboard-shift', '0px');
         keepLayoutViewportPinned();
+        if (wasKeyboardOpen && !focused) scheduleKeyboardRestoreBottom();
         return false;
       }
 
@@ -5841,6 +5892,7 @@
     }
 
     function beginKeyboardAlignment() {
+      clearKeyboardRestoreBottomTimers();
       keyboardComposerRevealDone = false;
       keyboardFocusStartedAt = performance.now();
       pinLayoutForKeyboardFocus();
@@ -5903,10 +5955,7 @@
       document.documentElement.style.setProperty('--app-height', `${Math.max(maxViewportHeight, window.innerHeight || 0, document.documentElement.clientHeight || 0)}px`);
       document.documentElement.style.setProperty('--keyboard-shift', '0px');
       keepLayoutViewportPinned();
-      requestAnimationFrame(() => {
-        thread.scrollTop = thread.scrollHeight;
-        positionComposerSignature();
-      });
+      scheduleKeyboardRestoreBottom();
     }
 
     function readOpenProjectKeys() {
@@ -7973,12 +8022,27 @@
       positionComposerSignature();
     }
 
+    function appendGuidanceMessageToActiveRun(text, attachments = [], options = {}) {
+      const anchor = activeAssistant?.article || null;
+      const label = options.userLabel || (attachments.length ? `你 · 引导 · ${attachments.length} 张图片` : '你 · 引导');
+      const user = messageEl('user', text || (attachments.length ? ' ' : ''), { label, skipScroll: Boolean(anchor) });
+      appendImagesToBubble(user, attachments);
+      if (anchor) {
+        anchor.before(user.article);
+        scrollBottom();
+      }
+    }
+
     function updateComposerAction() {
       const running = Boolean(activeAssistant || pollTimer);
-      sendButton.hidden = running;
-      sendButton.classList.toggle('composer-action-hidden', running);
+      sendButton.hidden = false;
+      sendButton.classList.remove('composer-action-hidden');
+      sendButton.title = running ? '排队发送（Enter）' : '发送（Enter）';
+      sendButton.setAttribute('aria-label', running ? '排队发送' : '发送');
       stopButton.hidden = !running;
       stopButton.classList.toggle('composer-action-hidden', !running);
+      guideButton.hidden = !running;
+      guideButton.classList.toggle('composer-action-hidden', !running);
       composer.classList.toggle('is-running', running);
       updateTitleDotState();
     }
@@ -7986,7 +8050,10 @@
     async function sendText(options = {}) {
       const hasTextOverride = typeof options.text === 'string';
       const isPendingNewThreadFirstSend = Boolean(pendingNewThread && !selectedThreadId);
-      const queueBehindActiveRun = Boolean((activeAssistant || pollTimer) && !isPendingNewThreadFirstSend);
+      const hasForegroundRun = Boolean((activeAssistant || pollTimer) && !isPendingNewThreadFirstSend);
+      const submitMode = options.submitMode === 'guide' && hasForegroundRun ? 'guide' : 'queue';
+      const guideActiveRun = submitMode === 'guide' && hasForegroundRun;
+      const queueBehindActiveRun = hasForegroundRun && !guideActiveRun;
       if (isPendingNewThreadFirstSend && (activeAssistant || pollTimer)) detachForegroundRunForNewThread();
       const text = hasTextOverride ? options.text : textarea.value;
       const attachmentsToSend = hasTextOverride ? [] : [...pendingAttachments];
@@ -7996,14 +8063,16 @@
       clearLocalStopSuppression(selectedThreadId);
 
       sendButton.disabled = true;
+      guideButton.disabled = true;
       setWorkingDot(true);
-      setNotice(options.sendingNotice || (queueBehindActiveRun ? '正在发送到 Codex 队列…' : '正在发送到 Codex…'), 'ok');
+      setNotice(options.sendingNotice || (guideActiveRun ? '正在作为引导发送…' : queueBehindActiveRun ? '正在发送到 Codex 队列…' : '正在发送到 Codex…'), 'ok');
       try {
         await ensureRouteForSend();
         await syncCodexThread(selectedThreadId, { quiet: true, force: true });
       } catch (error) {
         setNotice(error.message || '同步 Codex 线程失败，已取消发送', 'error');
         sendButton.disabled = false;
+        guideButton.disabled = false;
         setWorkingDot(false);
         if (hasTextOverride) restoreLayoutAfterKeyboard();
         else textarea.focus({ preventScroll: true });
@@ -8011,19 +8080,20 @@
       }
 
       const queuedSendId = queueBehindActiveRun ? addQueuedSend(text, attachmentsToSend, 'sending', { commandKind }) : '';
-      if (!queueBehindActiveRun) {
+      if (!queueBehindActiveRun && !guideActiveRun) {
         const user = messageEl('user', text || (attachmentsToSend.length ? ' ' : ''), { label: options.userLabel || textCommandUi?.userLabel || (attachmentsToSend.length ? `你 · ${attachmentsToSend.length} 张图片` : '你') });
         appendImagesToBubble(user, attachmentsToSend);
       }
-      const queuedAssistant = queueBehindActiveRun
-        ? null
-        : messageEl('assistant', textCommandUi?.pendingText || '已发送，等待 Codex 回复…', { label: textCommandUi ? textCommandUi.runningLabel('0s') : '已处理 0s', pending: true });
-      if (!queueBehindActiveRun) {
+      let queuedAssistant = null;
+      if (!queueBehindActiveRun && !guideActiveRun) {
+        queuedAssistant = messageEl('assistant', textCommandUi?.pendingText || '已发送，等待 Codex 回复…', { label: textCommandUi ? textCommandUi.runningLabel('0s') : '已处理 0s', pending: true });
+      }
+      if (!queueBehindActiveRun && !guideActiveRun) {
         activeAssistant = queuedAssistant;
         activeAssistant.commandKind = commandKind;
         setActiveRunStart('', Date.now());
       }
-      if (selectedThreadId && !queueBehindActiveRun) {
+      if (selectedThreadId && !queueBehindActiveRun && !guideActiveRun) {
         applyThreadRuntimeState(selectedThreadId, {
           status: 'waiting',
           active: true,
@@ -8056,6 +8126,7 @@
             assumeThreadSynced: true,
             expectNewThread: isPendingNewThreadFirstSend,
             directPasteWithoutClick: isPendingNewThreadFirstSend,
+            submitMode,
             attachments: attachmentsToSend.map(({ name, type, dataUrl }) => ({ name, type, dataUrl })),
           }),
           apiTimeoutMs: 60000,
@@ -8065,14 +8136,15 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) throw new Error(data.message || '发送失败');
         if (queueBehindActiveRun) updateQueuedSend(queuedSendId, 'queued');
-        setNotice(options.sentNotice || (queueBehindActiveRun ? '已发送，Codex 会排在当前回复后继续处理' : '已发送'), 'ok');
+        if (guideActiveRun) appendGuidanceMessageToActiveRun(text, attachmentsToSend, options);
+        setNotice(options.sentNotice || (guideActiveRun ? '已作为引导发送' : queueBehindActiveRun ? '已发送，Codex 会排在当前回复后继续处理' : '已发送'), 'ok');
         serializeMessages();
-        if (!queueBehindActiveRun) startPolling(data.watch || { since: new Date().toISOString() });
+        if (!queueBehindActiveRun && !guideActiveRun) startPolling(data.watch || { since: new Date().toISOString() });
       } catch (error) {
         if (queueBehindActiveRun) {
           removeQueuedSend(queuedSendId);
           messageEl('assistant', error.message || '发送失败', { label: 'Codex' });
-        } else if (activeAssistant) {
+        } else if (!guideActiveRun && activeAssistant) {
           activeAssistant.article.classList.remove('pending');
           setMarkdown(activeAssistant.bubble, error.message || '发送失败');
           activeAssistant = null;
@@ -8081,6 +8153,7 @@
         setNotice(error.message || '发送失败', 'error');
       } finally {
         sendButton.disabled = false;
+        guideButton.disabled = false;
         if (!activeAssistant && !pollTimer) setWorkingDot(false);
         if (hasTextOverride) restoreLayoutAfterKeyboard();
         else textarea.focus({ preventScroll: true });
@@ -8151,7 +8224,8 @@
     }, { capture: true });
     textarea.addEventListener('keydown', event => {
       if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
-        event.preventDefault(); sendText();
+        event.preventDefault();
+        sendText({ submitMode: event.ctrlKey ? 'guide' : 'queue' });
       }
     });
     textarea.addEventListener('focus', beginKeyboardAlignment);
@@ -8179,6 +8253,7 @@
 
     let stopPointerTriggeredAt = 0;
     let sendPointerTriggeredAt = 0;
+    let guidePointerTriggeredAt = 0;
     function keepKeyboardForStopButton(event) {
       if (event.cancelable) event.preventDefault();
       event.stopPropagation();
@@ -8200,6 +8275,13 @@
       if (sendButton.disabled || sendButton.hidden) return;
       sendPointerTriggeredAt = Date.now();
       sendText();
+    }
+
+    function triggerGuideButtonAction(event) {
+      keepKeyboardForSendButton(event);
+      if (guideButton.disabled || guideButton.hidden) return;
+      guidePointerTriggeredAt = Date.now();
+      sendText({ submitMode: 'guide' });
     }
 
     stopButton.addEventListener('pointerdown', keepKeyboardForStopButton, { passive: false });
@@ -8234,6 +8316,23 @@
       if (Date.now() - sendPointerTriggeredAt < 700) return;
       if (sendButton.disabled || sendButton.hidden) return;
       sendText();
+    });
+    guideButton.addEventListener('pointerdown', keepKeyboardForSendButton, { passive: false });
+    guideButton.addEventListener('pointerup', triggerGuideButtonAction, { passive: false });
+    guideButton.addEventListener('touchstart', keepKeyboardForSendButton, { passive: false });
+    guideButton.addEventListener('touchend', event => {
+      if (window.PointerEvent) {
+        keepKeyboardForSendButton(event);
+        return;
+      }
+      triggerGuideButtonAction(event);
+    }, { passive: false });
+    guideButton.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (Date.now() - guidePointerTriggeredAt < 700) return;
+      if (guideButton.disabled || guideButton.hidden) return;
+      sendText({ submitMode: 'guide' });
     });
     let attachPointerTriggeredAt = 0;
     function keepAttachButtonTap(event) {
