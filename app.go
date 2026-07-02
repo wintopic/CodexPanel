@@ -51,8 +51,8 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	wailsruntime.WindowCenter(ctx)
-	wailsruntime.WindowSetMinSize(ctx, 760, 392)
-	wailsruntime.WindowSetMaxSize(ctx, 760, 392)
+	wailsruntime.WindowSetMinSize(ctx, desktopWindowWidth, desktopWindowHeight)
+	wailsruntime.WindowSetMaxSize(ctx, desktopWindowWidth, desktopWindowHeight)
 
 	if err := a.startService(); err != nil {
 		logLine("Start local service failed:", err.Error())

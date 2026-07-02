@@ -47,13 +47,13 @@
 
     .shell {
       width: min(748px, calc(100vw - 4px));
-      height: auto;
+      height: calc(100vh - 4px);
       max-height: calc(100vh - 4px);
       margin: 0 auto;
-      padding: 6px 10px;
+      padding: 8px 10px;
       display: grid;
-      grid-template-rows: auto auto auto;
-      row-gap: 5px;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      row-gap: 7px;
       border: 1px solid rgba(42, 58, 88, .12);
       border-radius: 16px;
       background: var(--shell);
@@ -90,8 +90,8 @@
     .panel {
       min-height: 0;
       display: grid;
-      grid-template-rows: auto auto;
-      gap: 5px;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 7px;
     }
     .card {
       border: 1px solid var(--line);
@@ -102,22 +102,23 @@
     }
     .main-card {
       min-height: 0;
-      padding: 8px 10px;
+      padding: 10px 10px;
       display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
       align-content: start;
-      gap: 6px;
+      gap: 8px;
     }
     .core-card {
       border-color: rgba(11, 11, 12, .11);
       background: rgba(255,255,255,.9);
     }
     .service-bar {
-      min-height: 42px;
+      min-height: 46px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
       gap: 8px;
-      padding: 5px 9px;
+      padding: 6px 9px;
       border: 1px solid var(--line);
       border-radius: 14px;
       background: rgba(255,255,255,.9);
@@ -196,10 +197,10 @@
     .config-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 5px 10px;
+      gap: 6px 10px;
     }
     .core-card .config-grid {
-      gap: 5px 10px;
+      gap: 6px 10px;
     }
     .field {
       display: grid;
@@ -213,7 +214,7 @@
       white-space: nowrap;
     }
     .input-box {
-      min-height: 31px;
+      min-height: 34px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 7px;
@@ -225,7 +226,7 @@
       box-shadow: none;
     }
     .core-card .input-box {
-      min-height: 31px;
+      min-height: 34px;
       border-color: rgba(11,11,12,.16);
       background: rgba(255,255,255,.9);
       box-shadow: none;
@@ -273,14 +274,16 @@
     .icon-btn svg { width: 15px; height: 15px; }
     .icon-btn:hover { background: rgba(0,0,0,.055); }
     .links {
+      min-height: 0;
       display: grid;
-      gap: 5px;
+      gap: 7px;
+      align-content: space-between;
     }
     .core-card .links {
-      gap: 5px;
+      gap: 7px;
     }
     .link-row {
-      min-height: 33px;
+      min-height: 35px;
       display: grid;
       grid-template-columns: 26px 78px minmax(0, 1fr) 22px;
       gap: 7px;
@@ -291,7 +294,7 @@
       background: rgba(248,250,253,.82);
     }
     .core-card .link-row {
-      min-height: 33px;
+      min-height: 35px;
       grid-template-columns: 26px 78px minmax(0, 1fr) 22px;
       border-color: rgba(11,11,12,.13);
       background: rgba(248,250,253,.82);
@@ -329,12 +332,12 @@
       font-weight: 520;
     }
     .info-bar {
-      min-height: 40px;
+      min-height: 46px;
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       align-items: center;
       gap: 0;
-      padding: 4px 9px;
+      padding: 6px 9px;
       border: 1px solid var(--line);
       border-radius: 14px;
       background: rgba(255,255,255,.9);

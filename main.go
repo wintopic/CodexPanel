@@ -13,6 +13,11 @@ import (
 //go:embed all:public
 var embeddedPublic embed.FS
 
+const (
+	desktopWindowWidth  = 760
+	desktopWindowHeight = 440
+)
+
 func main() {
 	publicFS, err := fs.Sub(embeddedPublic, "public")
 	if err != nil {
@@ -23,12 +28,12 @@ func main() {
 
 	err = wails.Run(&options.App{
 		Title:         "CodexPanel 控制面板",
-		Width:         760,
-		Height:        392,
-		MinWidth:      760,
-		MinHeight:     392,
-		MaxWidth:      760,
-		MaxHeight:     392,
+		Width:         desktopWindowWidth,
+		Height:        desktopWindowHeight,
+		MinWidth:      desktopWindowWidth,
+		MinHeight:     desktopWindowHeight,
+		MaxWidth:      desktopWindowWidth,
+		MaxHeight:     desktopWindowHeight,
 		DisableResize: true,
 		AssetServer: &assetserver.Options{
 			Assets:     publicFS,
