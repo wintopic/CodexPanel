@@ -44,6 +44,9 @@ jobs:
           npm run check
           node --check windows/node-sidecar.js
 
+      - name: Build sidecar for Rust checks
+        run: npm run tauri:sidecar
+
       - name: Check Rust
         working-directory: src-tauri
         run: cargo check --locked
