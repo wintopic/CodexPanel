@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.0.13 - 2026-07-03
+
+- Improved Windows frameless window corner rendering.
+- Made the WebView/window background transparent so the visible shell owns the rounded edge.
+- Added slightly more spacing around the core controls.
+
 ## v3.0.12 - 2026-07-03
 
 - Added a Windows-only frameless desktop window.

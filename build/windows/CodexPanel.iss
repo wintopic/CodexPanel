@@ -1,5 +1,5 @@
 #ifndef AppVersion
-#define AppVersion "3.0.12"
+#define AppVersion "3.0.13"
 #endif
 
 #define ProjectRoot AddBackslash(SourcePath) + "..\.."

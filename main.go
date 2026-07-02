@@ -9,6 +9,7 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	winoptions "github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
 //go:embed all:public
@@ -43,8 +44,13 @@ func main() {
 			Middleware: desktopAssetMiddleware,
 		},
 		BackgroundColour: options.NewRGBA(238, 243, 251, 255),
-		OnStartup:        app.startup,
-		OnShutdown:       app.shutdown,
+		Windows: &winoptions.Options{
+			WebviewIsTransparent: true,
+			WindowIsTranslucent:  true,
+			BackdropType:         winoptions.None,
+		},
+		OnStartup:  app.startup,
+		OnShutdown: app.shutdown,
 		Bind: []interface{}{
 			app,
 		},

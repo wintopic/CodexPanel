@@ -32,12 +32,12 @@
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Text", "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); color: var(--ink); }
+    html, body { margin: 0; width: 100%; height: 100%; background: transparent; color: var(--ink); }
     body {
       height: 100vh;
-      padding: 2px;
+      padding: 0;
       overflow: hidden;
-      background: linear-gradient(180deg, #f8fbff, #edf3fb);
+      background: transparent;
     }
     button, input { font: inherit; }
     button { cursor: pointer; }
@@ -46,19 +46,20 @@
     h1, h2, h3, p { margin: 0; }
 
     .shell {
-      width: min(748px, calc(100vw - 4px));
-      height: calc(100vh - 4px);
-      max-height: calc(100vh - 4px);
-      margin: 0 auto;
-      padding: 8px 10px;
+      width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
+      margin: 0;
+      padding: 10px 14px 12px;
       display: grid;
       grid-template-rows: auto auto minmax(0, 1fr);
-      row-gap: 7px;
-      border: 1px solid rgba(42, 58, 88, .12);
-      border-radius: 16px;
-      background: var(--shell);
-      box-shadow: var(--shadow);
+      row-gap: 9px;
+      border: 1px solid rgba(42, 58, 88, .16);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(248,251,255,.98), rgba(239,245,252,.98));
+      box-shadow: 0 10px 30px rgba(28, 43, 72, .13);
       backdrop-filter: blur(14px);
+      overflow: hidden;
     }
     .top {
       display: flex;
@@ -120,7 +121,7 @@
       min-height: 0;
       display: grid;
       grid-template-rows: minmax(0, 1fr) auto;
-      gap: 7px;
+      gap: 9px;
     }
     .card {
       border: 1px solid var(--line);
@@ -131,11 +132,11 @@
     }
     .main-card {
       min-height: 0;
-      padding: 10px 10px;
+      padding: 12px 12px;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
       align-content: start;
-      gap: 8px;
+      gap: 10px;
     }
     .core-card {
       border-color: rgba(11, 11, 12, .11);
@@ -147,7 +148,7 @@
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
       gap: 8px;
-      padding: 6px 9px;
+      padding: 6px 10px;
       border: 1px solid var(--line);
       border-radius: 14px;
       background: rgba(255,255,255,.9);
@@ -226,10 +227,10 @@
     .config-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 6px 10px;
+      gap: 7px 12px;
     }
     .core-card .config-grid {
-      gap: 6px 10px;
+      gap: 7px 12px;
     }
     .field {
       display: grid;
@@ -305,11 +306,11 @@
     .links {
       min-height: 0;
       display: grid;
-      gap: 7px;
+      gap: 9px;
       align-content: space-between;
     }
     .core-card .links {
-      gap: 7px;
+      gap: 9px;
     }
     .link-row {
       min-height: 35px;
