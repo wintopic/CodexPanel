@@ -1,5 +1,9 @@
 # Cloudflare 中转部署
 
+> 新的广域网中转服务已经拆分到独立仓库
+> [wintopic/CodexPanel-WAN](https://github.com/wintopic/CodexPanel-WAN)。
+> 新部署请优先按照该仓库 README 操作；本文只保留为旧版本地模板参考。
+
 这个中转方案让手机通过 Cloudflare Pages 或 Worker 访问家里或办公室电脑上的 Codex。真正控制 Codex Desktop 的仍然是电脑本机 `server.js`，Cloudflare 只负责把手机请求转给在线的本机 Agent。
 
 推荐优先部署到 **Cloudflare Pages + 自定义域名**。如果 `workers.dev` 在你的网络环境里无法直连，Pages 自定义域名通常更容易访问。

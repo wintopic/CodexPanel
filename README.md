@@ -12,7 +12,7 @@ This repository contains the open local-control implementation:
 - Rust process manager for the Node sidecar.
 - Node local service for Codex Desktop automation and browser APIs.
 - Reused Web frontend for the local panel and remote mobile control page.
-- Optional Cloudflare Pages/Worker relay for WAN access.
+- WAN relay deployment maintained in the separate `CodexPanel-WAN` repository.
 - GitHub Actions Windows release build.
 
 ## Current Status
@@ -65,7 +65,7 @@ The Node sidecar serves:
 5. The sidecar runs the local HTTP service on the configured port.
 6. The desktop WebView opens `http://127.0.0.1:<port>/control.html?token=...`.
 7. The panel displays status, local entry, remote entry, PID, device ID, and uptime.
-8. The phone opens the LAN URL or Cloudflare remote URL in a browser.
+8. The phone opens the LAN URL or the Cloudflare WAN URL in a browser.
 9. The sidecar talks to Codex Desktop in the current logged-in desktop session.
 
 The local token is generated at runtime and is not packaged. The remote key and
@@ -173,22 +173,39 @@ Main fields:
 
 Do not hard-code these values into source or installer assets.
 
-## Cloudflare Relay
+## WAN / Cloudflare Relay
 
-Cloudflare relay support is optional. It lets the phone/browser reach the local
-computer when it is not on the same LAN.
+LAN use does not require Cloudflare. For WAN access across different networks,
+deploy the relay from the dedicated repository:
 
-Templates:
+- [wintopic/CodexPanel-WAN](https://github.com/wintopic/CodexPanel-WAN)
+
+Recommended setup flow:
+
+1. Deploy `CodexPanel-WAN` to Cloudflare Pages + Durable Object Worker by
+   following that repository's README.
+2. After deployment, record the Cloudflare service root URL, for example
+   `https://codexpanel-wan.pages.dev` or your custom domain.
+3. Open CodexPanel desktop settings and fill in:
+   - Cloudflare service URL: the root URL only, without `/remote/...`.
+   - Remote key: a strong key chosen by the user.
+4. Keep the desktop Device ID consistent with the device ID allowed in
+   `CodexPanel-WAN` when `DEVICE_IDS` is configured.
+5. Start the local service. The remote entry becomes:
+   `https://<cloudflare-domain>/remote/<deviceId>/?token=<remote-key>`.
+
+The computer is the controlled side and does not need an extra Cloudflare agent
+secret. The WAN relay only queues and forwards requests; CodexPanel on the local
+computer still validates the remote key and performs the actual Codex Desktop
+automation.
+
+Legacy relay examples remain in this repository for reference:
 
 - [cloudflare/wrangler.toml.example](cloudflare/wrangler.toml.example)
 - [cloudflare/pages/wrangler.toml.example](cloudflare/pages/wrangler.toml.example)
-
-Deployment notes:
-
 - [docs/cloudflare-relay.md](docs/cloudflare-relay.md)
 
-The relay should only forward traffic for the user's own device/session. The
-remote browser still needs the user-provided remote key.
+Use `CodexPanel-WAN` as the source of truth for new WAN deployments.
 
 ## GitHub Actions
 
