@@ -9,13 +9,6 @@ The remote control surface is still opened from a phone or another browser.
 
 This repository contains the open local-control implementation:
 
-- Wails desktop shell for Windows, Linux, and macOS.
-- Go process manager for the Node sidecar.
-- Node local service for Codex Desktop automation and browser APIs.
-- Reused Web frontend for the local panel and remote mobile control page.
-- WAN relay deployment maintained in the separate `CodexPanel-WAN` repository.
-- GitHub Actions desktop release builds.
-
 ## Discussion
 
 - Discussion address: [linux.do](https://linux.do)
