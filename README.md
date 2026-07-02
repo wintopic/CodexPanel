@@ -6,13 +6,6 @@ CodexPanel 是一个本地桌面控制面板，用于从手机或另一台设备
 
 本仓库包含本地控制面板的开源实现：
 
-- 面向 Windows、Linux、macOS 的 Wails 桌面壳。
-- 负责 Node sidecar 生命周期的 Go 进程管理器。
-- 面向 Codex Desktop 自动化和浏览器 API 的 Node 本地服务。
-- 本地控制面板和远端移动控制页复用的 Web 前端。
-- 广域网中转部署由独立仓库 `CodexPanel-WAN` 维护。
-- GitHub Actions 自动构建桌面发布包。
-
 ## 讨论交流
 
 - 讨论地址：[linux.do](https://linux.do)
