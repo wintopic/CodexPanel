@@ -143,12 +143,12 @@ jobs:
             name="CodexPanel ${GITHUB_REF_NAME}"
             notes="CodexPanel desktop release ${GITHUB_REF_NAME}."
           else
-            tag="latest"
-            name="CodexPanel Latest"
-            notes="Latest CodexPanel desktop build from main: ${GITHUB_SHA}."
+            version="$(node -p "require('./package.json').version")"
+            tag="v${version}"
+            name="CodexPanel v${version}"
+            notes="CodexPanel desktop release v${version}."
+            gh release delete latest --yes --cleanup-tag || true
             gh release delete "$tag" --yes --cleanup-tag || true
-            git tag -f "$tag" "$GITHUB_SHA"
-            git push -f origin "refs/tags/$tag"
           fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "name=$name" >> "$GITHUB_OUTPUT"
@@ -167,6 +167,7 @@ jobs:
           tag_name: ${{ steps.release.outputs.tag }}
           name: ${{ steps.release.outputs.name }}
           body: ${{ steps.release.outputs.notes }}
+          target_commitish: ${{ github.sha }}
           files: release-assets/*
           overwrite_files: true
           make_latest: true
