@@ -6,8 +6,8 @@
     "build:linux": "npm run wails:build",
     "build:desktop": "npm run wails:build",
     "setup:ubuntu": "bash scripts/setup-ubuntu-dev.sh",
-    "wails:dev": "wails dev",
-    "wails:build": "wails build -clean",
+    "wails:dev": "node scripts/run-wails.js dev",
+    "wails:build": "node scripts/run-wails.js build -clean",
     "wails:doctor": "wails doctor",
     "wails:sidecar": "node scripts/build-wails-sidecar.js"
   },

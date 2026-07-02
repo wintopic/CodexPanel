@@ -67,7 +67,7 @@ jobs:
         run: go test ./...
 
       - name: Build Wails desktop
-        run: wails build -clean
+        run: npm run wails:build
 
       - name: Build Node sidecar
         run: npm run wails:sidecar

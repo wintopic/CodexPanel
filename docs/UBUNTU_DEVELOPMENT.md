@@ -35,6 +35,9 @@ npm run wails:build
 npm run wails:sidecar
 ```
 
+`npm run wails:build` 会在 Linux 上自动使用 Wails 的 `webkit2_41`
+构建标记，匹配 Ubuntu 24.04 默认的 `libwebkit2gtk-4.1-dev`。
+
 产物位于：
 
 ```text
