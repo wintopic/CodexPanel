@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.0.10 - 2026-07-02
+## v3.0.11 - 2026-07-02
 
 - Kept the remote composer usable while a Codex thread is running.
 - Added queued send as the default running-state submit mode.
