@@ -1,5 +1,12 @@
 # Changelog
 
+## v3.0.10 - 2026-07-02
+
+- Kept the remote composer usable while a Codex thread is running.
+- Added queued send as the default running-state submit mode.
+- Added guide submit from Ctrl+Enter and the mobile guide button.
+- Improved mobile keyboard restore behavior so the composer settles back to the bottom.
+
 ## v3.0.5 - 2026-07-02
 
 - Renamed and cleaned the project as `CodexPanel`.
