@@ -49,12 +49,18 @@ func (a *App) proxyToSidecar(w http.ResponseWriter, r *http.Request) {
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		originalDirector(req)
+		a.mu.Lock()
+		token := a.token
+		a.mu.Unlock()
 		req.Host = target.Host
 		req.URL.Scheme = target.Scheme
 		req.URL.Host = target.Host
 		req.URL.Path = r.URL.Path
 		req.URL.RawPath = r.URL.RawPath
 		req.URL.RawQuery = r.URL.RawQuery
+		if token != "" {
+			req.Header.Set("x-codex-token", token)
+		}
 	}
 	proxy.ErrorHandler = func(rw http.ResponseWriter, _ *http.Request, proxyErr error) {
 		http.Error(rw, proxyErr.Error(), http.StatusBadGateway)
