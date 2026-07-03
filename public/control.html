@@ -1087,8 +1087,8 @@
       const savedConfig = data.settings?.savedControlConfig || {};
       $('setting-port').value = savedConfig.port || data.settings?.port || '';
       $('setting-device').value = data.settings?.deviceId || savedConfig.deviceId || deviceLabel || '';
-      $('setting-relay').value = savedConfig.relayUrl || '';
-      if (savedConfig.remoteKey || !savedConfig.remoteKeyConfigured) $('setting-key').value = savedConfig.remoteKey || '';
+      if (savedConfig.relayUrl) $('setting-relay').value = relayUrlValue(savedConfig.relayUrl);
+      if (savedConfig.remoteKey) $('setting-key').value = savedConfig.remoteKey;
       updateServiceAction(running);
       updateRemotePreview();
     }
@@ -1141,6 +1141,10 @@
       updateServiceAction(action === 'stop', true);
       showToast(action === 'stop' ? '正在停止本地服务...' : '正在启动本地服务...');
       try {
+        if (action === 'start') {
+          window.clearTimeout(configAutoSaveTimer);
+          await saveSettings({ silent: true, skipIncomplete: false });
+        }
         const result = await desktopInvoke('control_service', { action });
         await syncAfterServiceControl(result);
         showToast(result.message || (action === 'stop' ? '停止完成' : '启动完成'));
@@ -1161,7 +1165,9 @@
       };
       const relayConfigured = Boolean(settings.relayUrl.trim());
       if ((relayConfigured && !settings.remoteKey) || (!relayConfigured && settings.remoteKey)) {
-        if (!skipIncomplete && !silent) showToast('远控地址和远控密钥需要同时填写');
+        const message = '远控地址和远控密钥需要同时填写';
+        if (!skipIncomplete) throw new Error(message);
+        if (!silent) showToast(message);
         return;
       }
       const response = await authFetch('/codex/control-config', {
