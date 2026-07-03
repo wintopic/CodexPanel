@@ -67,6 +67,104 @@ func configuredRelayURL() string {
 	return ""
 }
 
+func saveControlConfig(payload map[string]any) (map[string]any, error) {
+	state := map[string]any{}
+	if data, err := os.ReadFile(codexStatePath()); err == nil && len(data) > 0 {
+		_ = json.Unmarshal(data, &state)
+	}
+	if state == nil {
+		state = map[string]any{}
+	}
+	config := normalizeControlConfigPayload(payload)
+	state["controlConfig"] = config
+	if _, ok := state["pinnedThreadIds"]; !ok {
+		state["pinnedThreadIds"] = []string{}
+	}
+	if _, ok := state["archivedThreadIds"]; !ok {
+		state["archivedThreadIds"] = []string{}
+	}
+	if _, ok := state["titleOverrides"]; !ok {
+		state["titleOverrides"] = map[string]any{}
+	}
+	if _, ok := state["guiFailureReports"]; !ok {
+		state["guiFailureReports"] = map[string]any{}
+	}
+
+	statePath := codexStatePath()
+	if err := os.MkdirAll(filepath.Dir(statePath), 0755); err != nil {
+		return nil, err
+	}
+	data, err := json.MarshalIndent(state, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	data = append(data, '\n')
+	if err := os.WriteFile(statePath, data, 0600); err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+func normalizeControlConfigPayload(input map[string]any) map[string]any {
+	if input == nil {
+		input = map[string]any{}
+	}
+	port := parseSavedPort(input["port"])
+	var portValue any = ""
+	if port > 0 {
+		portValue = port
+	}
+	relayURL := stringFromAny(input["relayUrl"])
+	if len([]rune(relayURL)) > 240 {
+		relayURL = string([]rune(relayURL)[:240])
+	}
+	return map[string]any{
+		"port":          portValue,
+		"relayUrl":      relayURL,
+		"deviceId":      defaultRelayDeviceId(),
+		"remoteKeyMode": "manual",
+		"remoteKey":     normalizeRemoteKey(stringFromAny(input["remoteKey"])),
+	}
+}
+
+func publicDesktopControlConfig(config map[string]any) map[string]any {
+	remoteKey := stringFromAny(config["remoteKey"])
+	return map[string]any{
+		"port":                config["port"],
+		"relayUrl":            stringFromAny(config["relayUrl"]),
+		"deviceId":            stringFromAny(config["deviceId"]),
+		"remoteKeyMode":       "manual",
+		"remoteKey":           remoteKey,
+		"remoteKeyConfigured": remoteKey != "",
+		"remoteKeyMasked":     redactSecret(remoteKey),
+	}
+}
+
+func redactSecret(value string) string {
+	secret := strings.TrimSpace(value)
+	if secret == "" {
+		return ""
+	}
+	runes := []rune(secret)
+	if len(runes) <= 4 {
+		return "***"
+	}
+	return string(runes[:2]) + "***" + string(runes[len(runes)-2:])
+}
+
+func stringFromAny(value any) string {
+	switch typed := value.(type) {
+	case string:
+		return typed
+	case fmt.Stringer:
+		return typed.String()
+	case nil:
+		return ""
+	default:
+		return fmt.Sprintf("%v", typed)
+	}
+}
+
 func savedControlValue(key string) (any, bool) {
 	data, err := os.ReadFile(codexStatePath())
 	if err != nil {
@@ -124,6 +222,37 @@ func parsePort(value string) int {
 
 func normalizeNonEmpty(value string) string {
 	return strings.TrimRight(strings.TrimSpace(value), "/")
+}
+
+func defaultRelayDeviceId() string {
+	username := ""
+	if user := strings.TrimSpace(os.Getenv("USERNAME")); user != "" {
+		username = user
+	} else if user := strings.TrimSpace(os.Getenv("USER")); user != "" {
+		username = user
+	}
+	if username == "" {
+		username = strings.TrimSpace(os.Getenv("COMPUTERNAME"))
+	}
+	if username == "" {
+		if hostname, err := os.Hostname(); err == nil {
+			username = hostname
+		}
+	}
+	normalized := strings.Map(func(ch rune) rune {
+		if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '.' || ch == '_' || ch == '-' {
+			return ch
+		}
+		return '-'
+	}, strings.TrimSpace(username))
+	normalized = strings.Trim(normalized, "-")
+	if len([]rune(normalized)) > 58 {
+		normalized = string([]rune(normalized)[:58])
+	}
+	if normalized == "" {
+		return "windows-pc"
+	}
+	return normalized
 }
 
 func normalizeRemoteKey(value string) string {

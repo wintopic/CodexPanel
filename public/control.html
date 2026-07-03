@@ -838,6 +838,26 @@
       if (!fn) throw new Error('当前页面没有桌面客户端权限，请从 CodexPanel 桌面窗口操作。');
       return fn();
     }
+    function desktopSaveControlConfig(settings) {
+      const fn = window.go?.main?.App?.SaveControlConfig;
+      return fn ? fn(settings) : null;
+    }
+    function plainErrorMessage(text = '', fallback = '服务暂不可用') {
+      const message = String(text || '').trim();
+      if (/dial tcp|connectex|connection refused|actively refused|bad gateway/i.test(message)) {
+        return '本地服务正在启动或暂不可用，请稍后重试';
+      }
+      return message.slice(0, 180) || fallback;
+    }
+    async function readJsonResponse(response, fallback = '请求失败') {
+      const text = await response.text();
+      if (!text.trim()) return {};
+      try {
+        return JSON.parse(text);
+      } catch {
+        throw new Error(plainErrorMessage(text, fallback));
+      }
+    }
     function formatUptime(seconds = 0) {
       const hour = Math.floor(seconds / 3600);
       const minute = Math.floor((seconds % 3600) / 60);
@@ -917,7 +937,7 @@
         renderStatus(data);
         return;
       }
-      const data = await response.json();
+      const data = await readJsonResponse(response, '读取服务状态失败');
       if (!response.ok || !data.ok) throw new Error(data.message || '读取服务状态失败');
       state.status = data;
       renderStatus(data);
@@ -925,7 +945,7 @@
     async function loadControlConfig() {
       const response = await authFetch('/codex/control-config');
       if (response.status === 404) return;
-      const data = await response.json();
+      const data = await readJsonResponse(response, '读取配置失败');
       if (!response.ok || !data.ok) throw new Error(data.message || '读取配置失败');
       state.config = data.config || {};
       applyConfig(data.config || {}, data.effective || {});
@@ -938,7 +958,7 @@
         renderServiceChecks([{ key: 'alert', label: '服务自检', ok: false, status: '待启动' }]);
         return;
       }
-      const data = await response.json();
+      const data = await readJsonResponse(response, '服务自检失败');
       if (!response.ok) throw new Error(data.message || '服务自检失败');
       state.checks = data.checks || [];
       $('check-summary').textContent = `${data.passed}/${data.total}`;
@@ -1170,13 +1190,22 @@
         if (!silent) showToast(message);
         return;
       }
+      const desktopSaved = desktopSaveControlConfig(settings);
+      if (desktopSaved) {
+        const data = await desktopSaved;
+        if (!data?.ok) throw new Error(data?.message || '保存配置失败');
+        state.config = data.config || {};
+        applyConfig(data.config || {}, data.effective || {});
+        if (!silent) showToast(data.message || '配置已保存');
+        return;
+      }
       const response = await authFetch('/codex/control-config', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(settings),
       });
       if (response.status === 404) throw new Error('后端更新后支持保存配置');
-      const data = await response.json();
+      const data = await readJsonResponse(response, '保存配置失败');
       if (!response.ok || !data.ok) throw new Error(data.message || '保存配置失败');
       state.config = data.config || {};
       applyConfig(data.config || {}, data.effective || {});

@@ -29,6 +29,13 @@ type ServiceControlResponse struct {
 	Message    string `json:"message"`
 }
 
+type ControlConfigResponse struct {
+	OK        bool           `json:"ok"`
+	Config    map[string]any `json:"config"`
+	Effective map[string]any `json:"effective"`
+	Message   string         `json:"message"`
+}
+
 func NewApp() *App {
 	port := configuredPort()
 	if port <= 0 {
@@ -71,6 +78,30 @@ func (a *App) GetControlToken() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.token
+}
+
+func (a *App) SaveControlConfig(payload map[string]any) (*ControlConfigResponse, error) {
+	config, err := saveControlConfig(payload)
+	if err != nil {
+		return nil, userError("保存配置失败：" + err.Error())
+	}
+	port := a.currentPort()
+	effectivePort := port
+	if savedPort := parseSavedPort(config["port"]); savedPort > 0 {
+		effectivePort = savedPort
+	}
+	return &ControlConfigResponse{
+		OK:     true,
+		Config: publicDesktopControlConfig(config),
+		Effective: map[string]any{
+			"port":          effectivePort,
+			"relayUrl":      stringFromAny(config["relayUrl"]),
+			"deviceId":      stringFromAny(config["deviceId"]),
+			"remoteKeyMode": "manual",
+			"remoteKey":     stringFromAny(config["remoteKey"]),
+		},
+		Message: "配置已保存。重启本地服务后生效。",
+	}, nil
 }
 
 func (a *App) ControlService(action string) (*ServiceControlResponse, error) {
